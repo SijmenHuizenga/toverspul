@@ -33,15 +33,13 @@ func docker(){
 }
 
 func installDocker(){
-	cmd := exec.Command("curl", "-fsSL", "get.docker.com", "-o", "get-docker.sh")
-	err := cmd.Run()
+	output, err := exec.Command("curl", "-fsSL", "get.docker.com", "-o", "get-docker.sh").CombinedOutput()
 	if err != nil {
-		log.Fatal("Could not get docker installation script", err)
+		log.Fatal("Could not get docker installation script ", err, " " + string(output))
 	}
 
-	cmd2 := exec.Command("sh", "get-docker.sh")
-	err2 := cmd2.Run()
+	output2, err2 := exec.Command("sh", "get-docker.sh").CombinedOutput()
 	if err2 != nil {
-		log.Fatal("Failed running docker installation script", err2)
+		log.Fatal("Failed running docker installation script ", err2, " " + string(output2))
 	}
 }
