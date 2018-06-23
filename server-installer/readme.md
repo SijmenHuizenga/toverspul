@@ -1,7 +1,7 @@
 Initializes a new Digital Ocean server to be part of the toverspul platform. Run as follows:
 
 ```
-$ toverspul-server-configurator (token) (ip:port)
+$ toverspul-server-installer (swarm-token) (swarm-managerip:port)
 ```
 
 Installs docker if it isn't installed.
@@ -17,7 +17,7 @@ If the hostname doesn't start with `master` it tries to joins a docker swarm if 
 ```
 #!/bin/bash
 
-wget https://raw.githubusercontent.com/SijmenHuizenga/toverspul/master/server-configurator/toverspul-server-configurator
-chmod +x toverspul-server-configurator
-./toverspul-server-configurator (TOKEN) (IP:PORT)
+wget https://raw.githubusercontent.com/SijmenHuizenga/toverspul/master/server-installer/toverspul-server-installer
+chmod +x toverspul-server-installer
+./toverspul-server-installer (TOKEN) (IP:PORT)
 ```

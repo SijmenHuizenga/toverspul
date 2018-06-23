@@ -15,9 +15,14 @@ func main() {
 	log.Println("Running on " + hostname + " with local ip " + ip)
 
 	docker()
+	dirs()
 	if strings.HasPrefix(hostname, "master") {
 		dockerSwarmMaster(ip)
 	} else {
 		dockerSwarmMinion()
 	}
+}
+func dirs(){
+	cmdFailOnErrorPrintOutput("mkdir", "/toverspul-data")
+	cmdFailOnErrorPrintOutput("mkdir", "/toverspul-config")
 }
