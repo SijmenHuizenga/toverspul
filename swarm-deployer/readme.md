@@ -12,5 +12,5 @@ Looks for all `docker-compose.yml` files in the repo and deploys tham as a stack
 ```bash
 wget https://raw.githubusercontent.com/SijmenHuizenga/toverspul/master/swarm-deployer/toverspul-swarm-deployer -O /usr/local/bin/toverspul-swarm-deployer
 chmod +x /usr/local/bin/toverspul-swarm-deployer
-crontab -l | { cat; echo "*/15 * * * * /usr/local/bin/toverspul-swarm-deployer /toverspul-config https://github.com/SijmenHuizenga/toverspul-config.git >> /var/log/toverspul-swarm-deployer.log 2>&1"; } | crontab -
+crontab -l | { cat; echo "*/15 * * * * /usr/local/bin/toverspul-swarm-deployer /toverspul-config >> /var/log/toverspul-swarm-deployer.log 2>&1"; } | crontab -
 ```
