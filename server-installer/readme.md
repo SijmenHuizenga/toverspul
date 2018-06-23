@@ -17,7 +17,7 @@ If the hostname doesn't start with `master` it tries to joins a docker swarm if 
 ```
 #!/bin/bash
 
-wget https://raw.githubusercontent.com/SijmenHuizenga/toverspul/master/server-installer/toverspul-server-installer
-chmod +x toverspul-server-installer
-./toverspul-server-installer (TOKEN) (IP:PORT)
+wget https://raw.githubusercontent.com/SijmenHuizenga/toverspul/master/server-installer/toverspul-server-installer -O /usr/local/bin/toverspul-server-installer
+chmod +x /usr/local/bin/toverspul-server-installer
+/usr/local/bin/toverspul-server-installer (TOKEN) (IP:PORT)
 ```
