@@ -10,7 +10,7 @@ import (
 
 func main(){
 	if len(os.Args) != 3 {
-		log.Fatal("Usage: toverspul-swarm-manager [repourl] [repodir]")
+		log.Fatal("Usage: toverspul-swarm-deployer [repodir] [repourl]")
 	}
 	repodir := os.Args[1]
 	repourl := os.Args[2]
@@ -31,6 +31,7 @@ func updateRepo(repodir string, repo string){
 	log.Println("Checking if repo exists...")
 	if fileNotExists(repodir) || !repoExists(repodir) {
 		log.Println("Doesnt exist. Cloning repo " +repo+ " in " + repodir)
+		exec.Command("mkdir", repodir).Run()
 		clone(repo, repodir)
 		log.Println("Repo cloned")
 	} else {
@@ -69,9 +70,12 @@ func projectName(composeFolder string) string{
 }
 
 func clone(repo string, dir string){
-	err := exec.Command("git", "--no-pager", "clone", repo, dir).Run()
+	cmd := exec.Command("git", "clone", repo, ".")
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	log.Print(string(output))
 	if err != nil {
-		log.Fatal("git clone failed", err)
+		log.Fatal("git clone failed ", err)
 	}
 }
 
