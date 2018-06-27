@@ -15,32 +15,31 @@ func main() {
 	userdata := `#!/bin/bash
 wget https://raw.githubusercontent.com/SijmenHuizenga/toverspul/master/server-installer/toverspul-server-installer -O /usr/local/bin/toverspul-server-installer
 chmod +x /usr/local/bin/toverspul-server-installer
-/usr/local/bin/toverspul-server-installer ` + config.swarmToken + ` ` + config.swarmIp + `
+/usr/local/bin/toverspul-server-installer ` + config.SwarmToken + ` ` + config.SwarmIp + `
 
 wget https://raw.githubusercontent.com/SijmenHuizenga/toverspul/master/git-cloner/toverspul-git-cloner -O /usr/local/bin/toverspul-git-cloner
 chmod +x /usr/local/bin/toverspul-git-cloner
 crontab -l | { cat; echo "*/14 * * * * /usr/local/bin/toverspul-git-cloner /toverspul-config https://github.com/SijmenHuizenga/toverspul-config.git >> /var/log/toverspul-git-cloner.log 2>&1"; } | crontab -
 `
 
-	key := godo.DropletCreateSSHKey{
-		Fingerprint: config.dropletSShFingerprint,
-	}
-
-	tokenSource := &TokenSource{AccessToken: config.doToken}
+	key := godo.DropletCreateSSHKey{Fingerprint: config.DropletSShFingerprint}
+	tokenSource := &TokenSource{AccessToken: config.DoToken}
+	image := godo.DropletCreateImage{Slug: config.DropletImage}
 
 	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
 	client := godo.NewClient(oauthClient)
 
 	createRequest := &godo.DropletCreateRequest{
-		Name:              config.dropletName,
-		Region: 		   config.dropletRegion,
-		Size:              config.dropletSize,
+		Name:              config.DropletName,
+		Region:            config.DropletRegion,
+		Size:              config.DropletSize,
 		SSHKeys:           []godo.DropletCreateSSHKey{key},
+		Image:             image,
 		PrivateNetworking: true,
 		Monitoring:        true,
 		Backups:           false,
 		UserData:          userdata,
-		Tags:              []string{"toverspul", config.dropletTag},
+		Tags:              []string{"toverspul", config.DropletTag},
 	}
 
 	ctx := context.TODO()
@@ -63,18 +62,19 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 }
 
 type Config struct {
-	dropletName           string
-	dropletRegion         string
-	dropletSize           string
-	dropletSShFingerprint string
-	dropletTag            string
-	swarmIp               string
-	swarmToken            string
-	doToken               string
+	DropletName           string
+	DropletRegion         string
+	DropletSize           string
+	DropletSShFingerprint string
+	DropletTag            string
+	DropletImage          string
+	SwarmIp               string
+	SwarmToken            string
+	DoToken               string
 }
 
 func ReadConfig() Config {
-	var configfile = "settings.conf"
+	var configfile = "./settings.conf"
 	_, err := os.Stat(configfile)
 	if err != nil {
 		log.Fatal("Config file is missing: ", configfile)

@@ -83,7 +83,7 @@ func startService(servicename string){
 }
 
 func privateNetIp() string{
-	cmd := exec.Command("bash", "-c", "ifconfig eth1 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'")
+	cmd := exec.Command("bash", "-c", "ifconfig eth1 | sed -En -e 's/.*inet ([0-9.]+).*/\\1/p'")
 
 	output, err := cmd.Output()
 
