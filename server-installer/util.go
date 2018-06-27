@@ -83,15 +83,15 @@ func startService(servicename string){
 }
 
 func privateNetIp() string{
-	cmd := exec.Command("bash", "-c", "ifconfig eth1 | sed -En -e 's/.*inet ([0-9.]+).*/\\1/p'")
+	cmd := exec.Command("bash", "-c", "ifconfig eth1 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'")
 
 	output, err := cmd.Output()
 
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 	if len(output) == 0 {
-		log.Fatal("eth1 doesnt exist")
+		log.Fatal("Could not find private network ip on eth1")
 	}
 
 	return removeLastChar(string(output))
