@@ -1,6 +1,7 @@
 module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Bootstrap.Grid as Grid
 
 import Model exposing (Job, jobDecoder)
 import Components.Job exposing (viewJobsTable)
@@ -37,9 +38,9 @@ update msg model =
 -- VIEW
 view : Model -> Html Msg
 view model =
-  div [ class "container" ][
-    div [ class "row" ][
-      div [ class "col-xs-12" ][
+  Grid.container [] [
+    Grid.row [] [
+      Grid.col [] [
         p [] [ text (model.error)],
         (viewJobsTable model.jobs)
       ]
