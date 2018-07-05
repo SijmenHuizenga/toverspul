@@ -1,10 +1,13 @@
-all: compile compress
+all: compile-backend compress-backend
 
-compile:
+compile-backend:
 	go build -i -o toverspul-rundeck
 
-run: compile
+run-backend: compile-backend
 	./toverspul-rundeck
 
-compress:
+run-frontend:
+	cd ui && npm start
+
+compress-backend:
 	upx --brute toverspul-rundeck
