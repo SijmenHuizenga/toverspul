@@ -89,7 +89,7 @@ func dockerStackRemove(projectName string) {
 	if err != nil {
 		log.Println("stack removal failed " + err.Error())
 	} else {
-		log.Println("stack deployment success")
+		log.Println("stack removal success")
 	}
 }
 

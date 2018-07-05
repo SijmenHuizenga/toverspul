@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"net/http"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 )
 
 var servers *mgo.Collection
@@ -44,7 +45,8 @@ func main() {
 	router.HandleFunc("/jobs/{id}", DeleteJob).Methods("DELETE")
 	router.HandleFunc("/jobs", GetJobs).Methods("GET")
 	router.HandleFunc("/jobs", CreateJob).Methods("POST")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
+	log.Fatal(http.ListenAndServe(":8090", handlers.CORS()(router)))
 }
 
 func ReadConfig() Config {
