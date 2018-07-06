@@ -1,27 +1,28 @@
 module Main exposing (..)
 import Html exposing (..)
-import Html.Attributes exposing (..)
 import Bootstrap.Grid as Grid
-
-import Model exposing (Job, jobDecoder)
 import Components.Job exposing (viewJobsTable)
 
-
 -- APP
+init : Model
+init = {jobsmodel = Components.Job.init, error = ""}
+
 main : Program Never Model Msg
 main =
-  program { init = ({jobs = [], error = ""}, refreshAllCmd),
+  program { init = (init, refreshAllCmd),
             view = view,
             update = update,
             subscriptions = \_ -> Sub.none }
 
+refreshAllCmd : Cmd Msg
 refreshAllCmd = Cmd.batch [
         Cmd.map JobMsg Components.Job.getJobsCmd
     ]
 
 -- MODEL`
+type alias JobsModel = Components.Job.Model
 type alias Model = {
-    jobs : Components.Job.Model,
+    jobsmodel : JobsModel,
     error : String}
 
 
@@ -31,19 +32,21 @@ type Msg = NoOp | JobMsg Components.Job.Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
-    JobMsg msg_ ->  let (jobs_, cmd_) = Components.Job.update msg_ model.jobs
-                    in ({model | jobs = jobs_}, Cmd.map JobMsg cmd_)
+    JobMsg msg_ ->  let (jobsmodel_, cmd_) = Components.Job.update msg_ model.jobsmodel
+                    in ({model | jobsmodel = jobsmodel_}, Cmd.map JobMsg cmd_)
     NoOp -> (model, Cmd.none)
 
 -- VIEW
 view : Model -> Html Msg
 view model =
-  Grid.container [] [
-    Grid.row [] [
-      Grid.col [] [
-        p [] [ text (model.error)],
-        (viewJobsTable model.jobs)
-      ]
+    div [] [
+        Html.map JobMsg (Components.Job.viewModal model.jobsmodel),
+        Grid.container [] [
+            Grid.row [] [
+              Grid.col [] [
+                p [] [ text (model.error)],
+                Html.map JobMsg (viewJobsTable model.jobsmodel)
+              ]
+            ]
+          ]
     ]
-  ]
-
