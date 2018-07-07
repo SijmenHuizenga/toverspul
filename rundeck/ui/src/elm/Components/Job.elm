@@ -1,19 +1,30 @@
 module Components.Job exposing (..)
 
 import Html exposing (..)
+import Html.Attributes exposing (for, placeholder)
 import Html.Events exposing (onClick)
 import Http
 import Bootstrap.Table as Table
 import Bootstrap.Modal as Modal
 import Bootstrap.Button as Button
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Textarea as Textarea
 import Json.Decode
 import Model exposing (Job, jobDecoder)
 import String exposing (join)
 
 
-type alias Model = {jobs : List Job, modalVisibility : Modal.Visibility}
+type ModalModus = New | Edit
+type alias Model = {jobs : List Job,
+                    modalVisibility : Modal.Visibility,
+                    modalModus : ModalModus,
+                    modalJob : Job}
 init : Model
-init = {jobs = [], modalVisibility = Modal.hidden}
+init = {jobs = [],
+        modalVisibility = Modal.hidden,
+        modalModus = Edit,
+        modalJob = {id = "123", title = "abc", hostnamePattern = "somepattern", commands = ["abc1", "abc2"]}}
 
 type Msg = GetJobs
          | JobsReceived (Result Http.Error (List Job))
@@ -60,19 +71,38 @@ viewModal : Model -> Html Msg
 viewModal model =
     div [] [
       Modal.config CloseModal
-        |> Modal.small
+        |> Modal.large
         |> Modal.hideOnBackdropClick True
-        |> Modal.h3 [] [ text "Modal header" ]
-        |> Modal.body [] [ p [] [ text "This is a modal for you !"] ]
-        |> Modal.footer []
-            [ Button.button
-                [ Button.outlinePrimary
-                , Button.attrs [ onClick CloseModal ]
-                ]
-                [ text "Close" ]
-            ]
+        |> Modal.h3 [] [ text (if model.modalModus == New then "New Job" else "Edit " ++ model.modalJob.title) ]
+        |> Modal.body [] [viewEditForm model.modalJob]
+        |> Modal.footer [] [
+            Button.button [ Button.outlineDanger, Button.attrs [ onClick CloseModal ]][ text "Delete" ],
+            Button.button [ Button.outlineWarning, Button.attrs [ onClick CloseModal ]][ text "Close without saving" ],
+            Button.button [ Button.outlineSuccess, Button.attrs [ onClick CloseModal ]][ text "Save" ]]
         |> Modal.view model.modalVisibility
         ]
+
+viewEditForm : Job -> Html Msg
+viewEditForm job =
+    div [] [
+        Form.form []
+            [ Form.group []
+                [ Form.label [] [ text "Title" ]
+                , Input.text [Input.value job.title]
+                ]
+            , Form.group []
+                [ Form.label [] [ text "Hostname Pattern" ]
+                , Input.text [Input.value job.hostnamePattern]
+                ]
+            , Form.group []
+                [ label [ for "commandsarea"] [ text "Commands"]
+                , Textarea.textarea
+                    [ Textarea.id "commandsarea"
+                    , Textarea.rows 3
+                    , Textarea.value (join "\n" job.commands)
+                    ]
+                ]
+            ]]
 
 
 getJobsCmd : Cmd Msg
