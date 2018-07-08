@@ -46,7 +46,12 @@ func main() {
 	router.HandleFunc("/jobs", GetJobs).Methods("GET")
 	router.HandleFunc("/jobs", CreateJob).Methods("POST")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
-	log.Fatal(http.ListenAndServe(":8090", handlers.CORS()(router)))
+
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
+
+	log.Fatal(http.ListenAndServe(":8090", handlers.CORS(originsOk, headersOk, methodsOk)(router)))
 }
 
 func ReadConfig() Config {

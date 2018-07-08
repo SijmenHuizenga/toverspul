@@ -1,6 +1,7 @@
 module Model exposing (..)
 
 import Json.Decode exposing (field, map4, string, list)
+import Json.Encode
 
 type alias Job =
     { id : String,
@@ -34,3 +35,12 @@ jobDecoder = map4 Job
     (field "title" string)
     (field "hostnamePattern" string)
     (field "commands" (Json.Decode.list string))
+
+jobEncoder : Job -> Json.Encode.Value
+jobEncoder job =
+    Json.Encode.object [
+        ( "ID", Json.Encode.string job.id )
+      , ( "title", Json.Encode.string job.title )
+      , ( "hostnamePattern", Json.Encode.string job.hostnamePattern )
+      , ( "commands", Json.Encode.list (List.map Json.Encode.string job.commands))
+    ]

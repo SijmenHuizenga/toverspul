@@ -37,6 +37,7 @@ func CreateJob(w http.ResponseWriter, r *http.Request) {
 		failOnError(err, w)
 		return
 	}
+	job.ID = bson.NewObjectId()
 
 	err = jobs.Insert(job)
 	objOrErr(w, err, job)
@@ -57,8 +58,14 @@ func UpdateJob(w http.ResponseWriter, r *http.Request) {
 
 func DeleteJob(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	err := jobs.RemoveId(bson.ObjectIdHex(params["id"]))
-	okOrErr(w, err)
+	var result Job
+	err := jobs.FindId(bson.ObjectIdHex(params["id"])).One(&result)
+	if err != nil {
+		failOnError(err, w)
+		return
+	}
+	err2 := jobs.RemoveId(bson.ObjectIdHex(params["id"]))
+	objOrErr(w, err2, result)
 }
 
 func failOnError(err error, w http.ResponseWriter) {
