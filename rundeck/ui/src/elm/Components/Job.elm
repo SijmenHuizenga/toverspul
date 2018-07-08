@@ -11,8 +11,9 @@ import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Textarea as Textarea
 import Json.Decode
-import Model exposing (Job, jobDecoder)
-import String exposing (join)
+import List exposing (filter)
+import Model exposing (Job, asJobCommands, asJobPatternIn, asJobTitleIn, jobDecoder, setJobCommands, setJobHostnamePattern, setJobTitle)
+import String exposing (isEmpty, join, split)
 
 
 type ModalModus = New | Edit
@@ -30,6 +31,9 @@ type Msg = GetJobs
          | JobsReceived (Result Http.Error (List Job))
          | CloseModal
          | ShowModal
+         | ModelNewTitle String
+         | ModelNewHostnamePattern String
+         | ModelNewCommands String
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -39,6 +43,30 @@ update msg model =
         JobsReceived (Err httpError) -> (model, Cmd.none)
         CloseModal -> ( { model | modalVisibility = Modal.hidden } , Cmd.none )
         ShowModal -> ( { model | modalVisibility = Modal.shown } , Cmd.none )
+        ModelNewTitle newTitle -> (
+            newTitle
+                |> asJobTitleIn model.modalJob
+                |> asModalJobIn model
+            , Cmd.none)
+        ModelNewHostnamePattern newPattern -> (
+            newPattern
+                |> asJobPatternIn model.modalJob
+                |> asModalJobIn model
+            , Cmd.none)
+        ModelNewCommands newCommands -> (
+            newCommands
+                |> split "\n"
+                --- |> filter (not << String.isEmpty)
+                |> asJobCommands model.modalJob
+                |> asModalJobIn model
+            , Cmd.none)
+
+setModalJob : Job -> Model -> Model
+setModalJob newJob model =
+    {model | modalJob = newJob}
+
+asModalJobIn : Model -> Job -> Model
+asModalJobIn = flip setModalJob
 
 
 viewJobsTable : Model -> Html Msg
@@ -88,11 +116,11 @@ viewEditForm job =
         Form.form []
             [ Form.group []
                 [ Form.label [] [ text "Title" ]
-                , Input.text [Input.value job.title]
+                , Input.text [Input.value job.title, Input.onInput ModelNewTitle]
                 ]
             , Form.group []
                 [ Form.label [] [ text "Hostname Pattern" ]
-                , Input.text [Input.value job.hostnamePattern]
+                , Input.text [Input.value job.hostnamePattern, Input.onInput ModelNewHostnamePattern]
                 ]
             , Form.group []
                 [ label [ for "commandsarea"] [ text "Commands"]
@@ -100,6 +128,7 @@ viewEditForm job =
                     [ Textarea.id "commandsarea"
                     , Textarea.rows 3
                     , Textarea.value (join "\n" job.commands)
+                    , Textarea.onInput ModelNewCommands
                     ]
                 ]
             ]]
