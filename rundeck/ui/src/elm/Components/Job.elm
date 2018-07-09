@@ -7,6 +7,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
+import ConnectionUtil
 import Html exposing (..)
 import Html.Attributes exposing (for, placeholder)
 import Html.Events exposing (onClick)
@@ -15,7 +16,7 @@ import Json.Decode
 import List exposing (filter)
 import List.Extra exposing (replaceIf)
 import Maybe exposing (Maybe(Nothing))
-import Model exposing (Job, asJobCommands, asJobPatternIn, asJobTitleIn, jobDecoder, jobEncoder, setJobCommands, setJobHostnamePattern, setJobTitle)
+import Model exposing (Job, asJobCommands, asJobPatternIn, asJobTitleIn, asJobWithoutEmptyCommands, jobDecoder, jobEncoder, setJobCommands, setJobHostnamePattern, setJobTitle)
 import Result exposing (Result(Ok))
 import String exposing (isEmpty, join, split)
 
@@ -82,7 +83,7 @@ update msg model =
                 |> (if model.modalModus == New then
                         createJob
                     else
-                        updateSingleJob
+                        updateJob
                    )
                     job
                 |> update CloseModal
@@ -99,7 +100,6 @@ update msg model =
         JobDeleted (Err httpError) ->
             ( { model | errorMessage = Just (toString httpError) }, Cmd.none )
 
-        --- todo
         CreateJob ->
             ( { model | modalVisibility = Modal.shown, modalJob = emptyJob, modalModus = New }, Cmd.none )
 
@@ -114,7 +114,7 @@ update msg model =
             , if model.modalModus == New then
                 createJobCmd model.modalJob
               else
-                storeJobCmd model.modalJob
+                updateJobCmd model.modalJob
             )
 
         ModalDelete ->
@@ -156,13 +156,8 @@ asModalJobIn =
     flip setModalJob
 
 
-asJobWithoutEmptyCommands : Job -> Job
-asJobWithoutEmptyCommands job =
-    { job | commands = filter (not << String.isEmpty) job.commands }
-
-
-updateSingleJob : Job -> Model -> Model
-updateSingleJob job model =
+updateJob : Job -> Model -> Model
+updateJob job model =
     { model | jobs = model.jobs |> replaceIf (\j -> j.id == job.id) job }
 
 
@@ -201,10 +196,11 @@ viewErrorMessage msg =
         |> Alert.danger
         |> Alert.dismissableWithAnimation DismissAlert
         |> Alert.children [ msg |> Maybe.withDefault "" |> text ]
-        |> Alert.view (thingy msg)
+        |> Alert.view (alertVisability msg)
 
 
-thingy text =
+alertVisability : Maybe String -> Alert.Visibility
+alertVisability text =
     case text of
         Just txt ->
             Alert.shown
@@ -280,49 +276,19 @@ viewEditForm job =
 
 getJobsCmd : Cmd Msg
 getJobsCmd =
-    Http.send JobsReceived (Http.get "http://localhost:8090/jobs" (Json.Decode.list jobDecoder))
+    ConnectionUtil.get "/jobs" (Json.Decode.list jobDecoder) JobsReceived
 
 
-storeJobCmd : Job -> Cmd Msg
-storeJobCmd job =
-    Http.send JobStored
-        (Http.request
-            { method = "PUT"
-            , url = "http://localhost:8090/jobs/" ++ job.id
-            , body = job |> asJobWithoutEmptyCommands |> jobEncoder |> jsonBody
-            , headers = []
-            , timeout = Nothing
-            , expect = expectJson jobDecoder
-            , withCredentials = False
-            }
-        )
+updateJobCmd : Job -> Cmd Msg
+updateJobCmd job =
+    ConnectionUtil.put ("/jobs/" ++ job.id) (job |> asJobWithoutEmptyCommands) jobEncoder jobDecoder JobStored
 
 
 deleteJobCmd : Job -> Cmd Msg
 deleteJobCmd job =
-    Http.send JobDeleted
-        (Http.request
-            { method = "DELETE"
-            , url = "http://localhost:8090/jobs/" ++ job.id
-            , body = Http.emptyBody
-            , headers = []
-            , timeout = Nothing
-            , expect = expectJson jobDecoder
-            , withCredentials = False
-            }
-        )
+    ConnectionUtil.delete ("/jobs/" ++ job.id) jobDecoder JobDeleted
 
 
 createJobCmd : Job -> Cmd Msg
 createJobCmd job =
-    Http.send JobStored
-        (Http.request
-            { method = "POST"
-            , url = "http://localhost:8090/jobs"
-            , body = job |> asJobWithoutEmptyCommands |> jobEncoder |> jsonBody
-            , headers = []
-            , timeout = Nothing
-            , expect = expectJson jobDecoder
-            , withCredentials = False
-            }
-        )
+    ConnectionUtil.post "/jobs" (job |> asJobWithoutEmptyCommands) jobEncoder jobDecoder JobStored

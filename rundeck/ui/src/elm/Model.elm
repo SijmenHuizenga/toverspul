@@ -42,6 +42,11 @@ asJobCommands =
     flip setJobCommands
 
 
+asJobWithoutEmptyCommands : Job -> Job
+asJobWithoutEmptyCommands job =
+    { job | commands = List.filter (not << String.isEmpty) job.commands }
+
+
 jobDecoder =
     map4 Job
         (field "ID" string)
