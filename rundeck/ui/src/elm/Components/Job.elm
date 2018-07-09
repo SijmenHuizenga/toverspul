@@ -1,5 +1,6 @@
 module Components.Job exposing (..)
 
+import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
@@ -29,6 +30,7 @@ type alias Model =
     , modalVisibility : Modal.Visibility
     , modalModus : ModalModus
     , modalJob : Job
+    , errorMessage : Maybe String
     }
 
 
@@ -43,6 +45,7 @@ init =
     , modalVisibility = Modal.hidden
     , modalModus = Edit
     , modalJob = emptyJob
+    , errorMessage = Nothing
     }
 
 
@@ -59,6 +62,7 @@ type Msg
     | ModelNewCommands String
     | ModalSave
     | ModalDelete
+    | DismissAlert Alert.Visibility
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -71,9 +75,8 @@ update msg model =
             ( { model | jobs = jobs }, Cmd.none )
 
         JobsReceived (Err httpError) ->
-            ( model, Cmd.none )
+            ( { model | errorMessage = Just (toString httpError) }, Cmd.none )
 
-        --- todo
         JobStored (Ok job) ->
             ( model
                 |> (if model.modalModus == New then
@@ -87,17 +90,14 @@ update msg model =
             , Cmd.none
             )
 
-        --- todo for real
         JobStored (Err httpError) ->
-            ( model, Cmd.none )
+            ( { model | errorMessage = Just (toString httpError) }, Cmd.none )
 
-        --- todo
         JobDeleted (Ok job) ->
             ( model |> deleteJob job |> update CloseModal |> Tuple.first, Cmd.none )
 
-        --- todo for real
         JobDeleted (Err httpError) ->
-            ( model, Cmd.none )
+            ( { model | errorMessage = Just (toString httpError) }, Cmd.none )
 
         --- todo
         CreateJob ->
@@ -142,6 +142,9 @@ update msg model =
             , Cmd.none
             )
 
+        DismissAlert visability ->
+            ( { model | errorMessage = Nothing }, Cmd.none )
+
 
 setModalJob : Job -> Model -> Model
 setModalJob newJob model =
@@ -176,7 +179,8 @@ deleteJob job model =
 viewJobsTable : Model -> Html Msg
 viewJobsTable model =
     div []
-        [ Table.table
+        [ viewErrorMessage model.errorMessage
+        , Table.table
             { options = [ Table.striped, Table.hover ]
             , thead =
                 Table.simpleThead
@@ -189,6 +193,24 @@ viewJobsTable model =
             , tbody = Table.tbody [] (List.map viewJobRow model.jobs)
             }
         ]
+
+
+viewErrorMessage : Maybe String -> Html Msg
+viewErrorMessage msg =
+    Alert.config
+        |> Alert.danger
+        |> Alert.dismissableWithAnimation DismissAlert
+        |> Alert.children [ msg |> Maybe.withDefault "" |> text ]
+        |> Alert.view (thingy msg)
+
+
+thingy text =
+    case text of
+        Just txt ->
+            Alert.shown
+
+        Nothing ->
+            Alert.closed
 
 
 viewJobRow : Job -> Table.Row Msg
@@ -220,7 +242,10 @@ viewModal model =
                 ]
             |> Modal.body [] [ viewEditForm model.modalJob ]
             |> Modal.footer []
-                [ Button.button [ Button.outlineDanger, Button.attrs [ onClick ModalDelete ] ] [ text "Delete" ]
+                [ if model.modalModus == Edit then
+                    Button.button [ Button.outlineDanger, Button.attrs [ onClick ModalDelete ] ] [ text "Delete" ]
+                  else
+                    Html.text ""
                 , Button.button [ Button.outlineWarning, Button.attrs [ onClick CloseModal ] ] [ text "Close without saving" ]
                 , Button.button [ Button.outlineSuccess, Button.attrs [ onClick ModalSave ] ] [ text "Save" ]
                 ]
