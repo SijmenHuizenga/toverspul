@@ -29,22 +29,20 @@ func main() {
 	jobs = db.C("jobs")
 	executions = db.C("executions")
 
-
-	//servers.Insert(Server{Hostname: "hostname", IpPort: "ipport", Privatekey: "privatekey", User: "user"})
-	//
-	//var results []Server
-	//err = servers.Find(bson.M{}).All(&results)
-	//
-	//for _, result := range results {
-	//	log.Println(result.ID)
-	//}
-
 	router := mux.NewRouter()
 	router.HandleFunc("/jobs/{id}", GetJob).Methods("GET")
 	router.HandleFunc("/jobs/{id}", UpdateJob).Methods("PUT")
 	router.HandleFunc("/jobs/{id}", DeleteJob).Methods("DELETE")
 	router.HandleFunc("/jobs", GetJobs).Methods("GET")
 	router.HandleFunc("/jobs", CreateJob).Methods("POST")
+
+	router.HandleFunc("/servers/{id}", GetServer).Methods("GET")
+	router.HandleFunc("/servers/{id}", UpdateServer).Methods("PUT")
+	router.HandleFunc("/servers/{id}", DeleteServer).Methods("DELETE")
+	router.HandleFunc("/servers", GetServers).Methods("GET")
+	router.HandleFunc("/servers", CreateServer).Methods("POST")
+
+
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})

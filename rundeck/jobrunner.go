@@ -35,7 +35,7 @@ func RunCommandsOnServer(server Server, commands []string) JobExecutionServer {
 
 	var hostKey ssh.PublicKey
 
-	signer, err := ssh.ParsePrivateKey([]byte(server.Privatekey))
+	signer, err := ssh.ParsePrivateKey([]byte(server.PrivateKey))
 	if err != nil {
 		return result(err.Error(), StatusStartupSshFailure, start, server)
 	}

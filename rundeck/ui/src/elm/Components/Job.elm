@@ -7,23 +7,19 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
+import Components.Common exposing (ModalModus(Edit, New))
 import ConnectionUtil
 import Html exposing (..)
 import Html.Attributes exposing (for, placeholder)
 import Html.Events exposing (onClick)
 import Http exposing (Body, expectJson, jsonBody)
+import Job exposing (Job, asJobCommands, asJobPatternIn, asJobTitleIn, asJobWithoutEmptyCommands, jobDecoder, jobEncoder, setJobCommands, setJobHostnamePattern, setJobTitle)
 import Json.Decode
 import List exposing (filter)
 import List.Extra exposing (replaceIf)
 import Maybe exposing (Maybe(Nothing))
-import Model exposing (Job, asJobCommands, asJobPatternIn, asJobTitleIn, asJobWithoutEmptyCommands, jobDecoder, jobEncoder, setJobCommands, setJobHostnamePattern, setJobTitle)
 import Result exposing (Result(Ok))
 import String exposing (isEmpty, join, split)
-
-
-type ModalModus
-    = New
-    | Edit
 
 
 type alias Model =
@@ -179,8 +175,7 @@ viewJobsTable model =
             { options = [ Table.striped, Table.hover ]
             , thead =
                 Table.simpleThead
-                    [ Table.th [] [ text "Id" ]
-                    , Table.th [] [ text "Title" ]
+                    [ Table.th [] [ text "Title" ]
                     , Table.th [] [ text "Hostname Pattern" ]
                     , Table.th [] [ text "Commands" ]
                     , Table.th [] [ Button.button [ Button.outlineSuccess, Button.small, Button.attrs [ onClick <| CreateJob ] ] [ text "New Job" ] ]
@@ -212,8 +207,7 @@ alertVisability text =
 viewJobRow : Job -> Table.Row Msg
 viewJobRow job =
     Table.tr []
-        [ Table.td [] [ text job.id ]
-        , Table.td [] [ text job.title ]
+        [ Table.td [] [ text job.title ]
         , Table.td [] [ text job.hostnamePattern ]
         , Table.td [] [ text (join ", " job.commands) ]
         , Table.td []

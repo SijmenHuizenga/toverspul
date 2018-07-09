@@ -9,10 +9,10 @@ type Config struct {
 
 type Server struct {
 	ID         bson.ObjectId `bson:"_id,omitempty"`
-	Hostname   string
-	IpPort     string
-	Privatekey string
-	User       string
+	Hostname   string	`json:"hostname"`
+	IpPort     string	`json:"ipPort"`
+	PrivateKey string	`json:"privateKey"`
+	User       string	`json:"user"`
 }
 
 type Job struct {
