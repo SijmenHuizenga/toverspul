@@ -54,23 +54,30 @@ func execJob(exec JobExecution, availableServers []Server) {
 	var execResults []JobExecutionServer
 
 	for _, server := range targetServers {
-		execResults = append(execResults, JobExecutionServer{
-			Server: server.ID,
-		})
+		serverResult := JobExecutionServer{
+			Server: server,
+		}
+		serverResult.Server.PrivateKey = "***"
+
+		execResults = append(execResults, serverResult)
 	}
 
 	for i, server := range targetServers {
 		go func(i int, server Server) {
 			defer wg.Done()
-			execResults[i] = RunCommandsOnServer(server, exec.Job.Commands)
-			exec.Executions = execResults
-			executions.UpdateId(exec.ID, exec)
+			logs, status, start, end := RunCommandsOnServer(server, exec.Job.Commands)
+
+			execResults[i].Logs = logs
+			execResults[i].StartTimestamp = start
+			execResults[i].FinishTimestamp = end
+			execResults[i].Status = status
 		}(i, server)
 	}
 
 	wg.Wait()
+
 	exec.FinishTimestamp = time.Now().Unix()
 	exec.Executions = execResults
-
 	executions.UpdateId(exec.ID, exec)
+
 }

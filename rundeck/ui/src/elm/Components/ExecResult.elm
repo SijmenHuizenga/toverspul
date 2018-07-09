@@ -118,7 +118,7 @@ viewEditForm execResult =
 viewExecutionLogs : ExecResultServer -> Html msg
 viewExecutionLogs exec =
     div []
-        [ h4 [] [ text exec.server ]
+        [ h4 [] [ text exec.server.hostname ]
         , pre [] [ text exec.logs ]
         ]
 

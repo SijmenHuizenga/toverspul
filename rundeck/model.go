@@ -35,7 +35,7 @@ type JobExecution struct {
 }
 
 type JobExecutionServer struct {
-	Server          bson.ObjectId `bson:"_id,omitempty"`
+	Server          Server        `json:"server"`
 	StartTimestamp  int64         `json:"startTimestamp"`
 	FinishTimestamp int64         `json:"finishTimestamp"`
 	Logs            string        `json:"logs"`

@@ -13,14 +13,14 @@ const (
 	StatusExecutionFailure         = "FAILURE_EXECUTION"
 )
 
-func RunCommandsOnServer(server Server, commands []string) JobExecutionServer {
+func RunCommandsOnServer(server Server, commands []string) (string, string, int64, int64) {
 	start := time.Now().Unix()
 
 	var hostKey ssh.PublicKey
 
 	signer, err := ssh.ParsePrivateKey([]byte(server.PrivateKey))
 	if err != nil {
-		return result(err.Error(), StatusStartupSshFailure, start, server)
+		return err.Error(), StatusStartupSshFailure, start, time.Now().Unix()
 	}
 
 	sshConfig := &ssh.ClientConfig{
@@ -32,14 +32,14 @@ func RunCommandsOnServer(server Server, commands []string) JobExecutionServer {
 
 	client, err := ssh.Dial("tcp", server.IpPort, sshConfig)
 	if err != nil {
-		return result(err.Error(), StatusStartupConnectionFailure, start, server)
+		return err.Error(), StatusStartupConnectionFailure, start, time.Now().Unix()
 	}
 
 	session, err := client.NewSession()
 	defer client.Close()
 
 	if err != nil {
-		return result(err.Error(), StatusStartupSessionFailure, start, server)
+		return err.Error(), StatusStartupSessionFailure, start, time.Now().Unix()
 	}
 
 	logs := ""
@@ -50,21 +50,11 @@ func RunCommandsOnServer(server Server, commands []string) JobExecutionServer {
 		logs += string(out) + "\n\n"
 		if err != nil {
 			logs += err.Error()
-			return result(logs, StatusExecutionFailure, start, server)
+			return logs, StatusExecutionFailure, start, time.Now().Unix()
 		}
 	}
 
-	return result(logs, StatusOk, start, server)
-}
-
-func result(logs string, status string, startTimestamp int64, server Server) JobExecutionServer {
-	return JobExecutionServer{
-		Logs: logs,
-		Status: status,
-		StartTimestamp: startTimestamp,
-		FinishTimestamp: time.Now().Unix(),
-		Server: server.ID,
-	}
+	return logs, StatusOk, start, time.Now().Unix()
 }
 
 func Any(vs []string, f func(string) bool) bool {

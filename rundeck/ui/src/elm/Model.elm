@@ -136,7 +136,7 @@ execResultDecoder =
 
 
 type alias ExecResultServer =
-    { server : String
+    { server : Server
     , startTimestamp : Int
     , finishTimestamp : Int
     , logs : String
@@ -147,7 +147,7 @@ type alias ExecResultServer =
 execResultServerDecoder : Decode.Decoder ExecResultServer
 execResultServerDecoder =
     Decode.map5 ExecResultServer
-        (Decode.field "Server" Decode.string)
+        (Decode.field "server" serverDecoder)
         (Decode.field "startTimestamp" Decode.int)
         (Decode.field "finishTimestamp" Decode.int)
         (Decode.field "logs" Decode.string)
