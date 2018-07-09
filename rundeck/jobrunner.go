@@ -13,23 +13,6 @@ const (
 	StatusExecutionFailure         = "FAILURE_EXECUTION"
 )
 
-func RunJob(job Job, availableServers []Server) JobExecution {
-	start := time.Now().Unix()
-	var execResults []JobExecutionServer
-
-	for _, server := range availableServers {
-		if job.RunsOn(server) {
-			execResults = append(execResults, RunCommandsOnServer(server, job.Commands))
-		}
-	}
-
-	return JobExecution{
-		FinishTimestamp: time.Now().Unix(),
-		StartTimestamp: start,
-		Executions: execResults,
-	}
-}
-
 func RunCommandsOnServer(server Server, commands []string) JobExecutionServer {
 	start := time.Now().Unix()
 

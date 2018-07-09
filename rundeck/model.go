@@ -30,6 +30,7 @@ type JobExecution struct {
 	ID              bson.ObjectId `bson:"_id,omitempty"`
 	StartTimestamp  int64
 	FinishTimestamp int64
+	Job				Job
 	Executions      []JobExecutionServer
 }
 

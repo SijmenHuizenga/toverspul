@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -22,10 +21,14 @@ func GetServers(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetServer(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
+	id, err := param(r, "id")
+	if err != nil {
+		failOnError(err, w)
+		return
+	}
 
 	var result Server
-	err := servers.FindId(bson.ObjectIdHex(params["id"])).One(&result)
+	err = servers.FindId(id).One(&result)
 	objOrErr(w, err, result)
 }
 
@@ -43,26 +46,36 @@ func CreateServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateServer(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	var server Server
-	err := json.NewDecoder(r.Body).Decode(&server)
+	id, err := param(r, "id")
 	if err != nil {
 		failOnError(err, w)
 		return
 	}
 
-	err = servers.UpdateId(bson.ObjectIdHex(params["id"]), server)
+	var server Server
+	err = json.NewDecoder(r.Body).Decode(&server)
+	if err != nil {
+		failOnError(err, w)
+		return
+	}
+
+	err = servers.UpdateId(id, server)
 	objOrErr(w, err, server)
 }
 
 func DeleteServer(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	var result Server
-	err := servers.FindId(bson.ObjectIdHex(params["id"])).One(&result)
+	id, err := param(r, "id")
 	if err != nil {
 		failOnError(err, w)
 		return
 	}
-	err2 := servers.RemoveId(bson.ObjectIdHex(params["id"]))
+
+	var result Server
+	err = servers.FindId(id).One(&result)
+	if err != nil {
+		failOnError(err, w)
+		return
+	}
+	err2 := servers.RemoveId(id)
 	objOrErr(w, err2, result)
 }

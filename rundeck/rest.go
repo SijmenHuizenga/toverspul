@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"encoding/json"
 	"html"
+	"github.com/gorilla/mux"
+	"gopkg.in/mgo.v2/bson"
+	"errors"
 )
 
 func failOnError(err error, w http.ResponseWriter) {
@@ -35,4 +38,17 @@ func okOrErr(w http.ResponseWriter, err error){
 	} else {
 		ok(w)
 	}
+}
+
+func param(r *http.Request, paramName string) (bson.ObjectId, error) {
+	params := mux.Vars(r)
+
+	if _, ok := params[paramName]; !ok {
+		return "", errors.New(paramName + " not provided")
+	}
+
+	if !bson.IsObjectIdHex(params[paramName]) {
+		return "", errors.New("invalid " + paramName)
+	}
+	return bson.ObjectIdHex(params[paramName]), nil
 }
