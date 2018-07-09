@@ -30,7 +30,7 @@ func RunCommandsOnServer(server Server, commands []string) JobExecutionServer {
 	}
 	sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
 
-	client, err := ssh.Dial("tcp", server.Hostname, sshConfig)
+	client, err := ssh.Dial("tcp", server.IpPort, sshConfig)
 	if err != nil {
 		return result(err.Error(), StatusStartupConnectionFailure, start, server)
 	}

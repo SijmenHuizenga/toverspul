@@ -7,7 +7,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
-import Components.Common exposing (ModalModus(Edit, New), makeErrorMessage)
+import Components.Common exposing (ModalModus(Edit, New), makeErrorMessage, viewErrorMessage)
 import ConnectionUtil
 import Html exposing (..)
 import Html.Attributes exposing (for, placeholder)
@@ -17,8 +17,8 @@ import Json.Decode
 import List exposing (filter)
 import List.Extra exposing (replaceIf)
 import Maybe exposing (Maybe(Nothing))
+import Model exposing (Server, asHostnameIn, asIpPortIn, asPrivateKeyIn, asUserIn, serverDecoder, serverEncoder)
 import Result exposing (Result(Ok))
-import Server exposing (..)
 
 
 type alias Model =
@@ -176,7 +176,7 @@ deleteServer server model =
 viewServersTable : Model -> Html Msg
 viewServersTable model =
     div []
-        [ viewErrorMessage model.errorMessage
+        [ viewErrorMessage model.errorMessage DismissAlert
         , Table.table
             { options = [ Table.striped, Table.hover ]
             , thead =
@@ -189,25 +189,6 @@ viewServersTable model =
             , tbody = Table.tbody [] (List.map viewServerRow model.servers)
             }
         ]
-
-
-viewErrorMessage : Maybe String -> Html Msg
-viewErrorMessage msg =
-    Alert.config
-        |> Alert.danger
-        |> Alert.dismissableWithAnimation DismissAlert
-        |> Alert.children [ msg |> Maybe.withDefault "" |> text ]
-        |> Alert.view (alertVisability msg)
-
-
-alertVisability : Maybe String -> Alert.Visibility
-alertVisability text =
-    case text of
-        Just txt ->
-            Alert.shown
-
-        Nothing ->
-            Alert.closed
 
 
 viewServerRow : Server -> Table.Row Msg

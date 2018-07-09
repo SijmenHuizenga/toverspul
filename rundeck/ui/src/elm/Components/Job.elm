@@ -7,17 +7,17 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
-import Components.Common exposing (ModalModus(Edit, New))
+import Components.Common exposing (ModalModus(Edit, New), viewErrorMessage)
 import ConnectionUtil
 import Html exposing (..)
 import Html.Attributes exposing (for, placeholder)
 import Html.Events exposing (onClick)
 import Http exposing (Body, expectJson, jsonBody)
-import Job exposing (Job, asJobCommands, asJobPatternIn, asJobTitleIn, asJobWithoutEmptyCommands, jobDecoder, jobEncoder, setJobCommands, setJobHostnamePattern, setJobTitle)
 import Json.Decode
 import List exposing (filter)
 import List.Extra exposing (replaceIf)
 import Maybe exposing (Maybe(Nothing))
+import Model exposing (ExecResult, Job, asJobCommands, asJobPatternIn, asJobTitleIn, asJobWithoutEmptyCommands, execResultDecoder, jobDecoder, jobEncoder, setJobCommands, setJobHostnamePattern, setJobTitle)
 import Result exposing (Result(Ok))
 import String exposing (isEmpty, join, split)
 
@@ -60,6 +60,8 @@ type Msg
     | ModalSave
     | ModalDelete
     | DismissAlert Alert.Visibility
+    | RunJob Job
+    | JobStarted (Result Http.Error ExecResult)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -102,6 +104,9 @@ update msg model =
         EditJob job ->
             ( { model | modalVisibility = Modal.shown, modalJob = job, modalModus = Edit }, Cmd.none )
 
+        RunJob job ->
+            ( model, runJobCmd job )
+
         CloseModal ->
             ( { model | modalVisibility = Modal.hidden }, Cmd.none )
 
@@ -141,6 +146,9 @@ update msg model =
         DismissAlert visability ->
             ( { model | errorMessage = Nothing }, Cmd.none )
 
+        JobStarted _ ->
+            ( model, Cmd.none )
+
 
 setModalJob : Job -> Model -> Model
 setModalJob newJob model =
@@ -170,7 +178,7 @@ deleteJob job model =
 viewJobsTable : Model -> Html Msg
 viewJobsTable model =
     div []
-        [ viewErrorMessage model.errorMessage
+        [ viewErrorMessage model.errorMessage DismissAlert
         , Table.table
             { options = [ Table.striped, Table.hover ]
             , thead =
@@ -185,25 +193,6 @@ viewJobsTable model =
         ]
 
 
-viewErrorMessage : Maybe String -> Html Msg
-viewErrorMessage msg =
-    Alert.config
-        |> Alert.danger
-        |> Alert.dismissableWithAnimation DismissAlert
-        |> Alert.children [ msg |> Maybe.withDefault "" |> text ]
-        |> Alert.view (alertVisability msg)
-
-
-alertVisability : Maybe String -> Alert.Visibility
-alertVisability text =
-    case text of
-        Just txt ->
-            Alert.shown
-
-        Nothing ->
-            Alert.closed
-
-
 viewJobRow : Job -> Table.Row Msg
 viewJobRow job =
     Table.tr []
@@ -212,6 +201,7 @@ viewJobRow job =
         , Table.td [] [ text (join ", " job.commands) ]
         , Table.td []
             [ Button.button [ Button.info, Button.attrs [ onClick (EditJob job) ] ] [ text "Edit" ]
+            , Button.button [ Button.warning, Button.attrs [ onClick (RunJob job) ] ] [ text "Run" ]
             ]
         ]
 
@@ -286,3 +276,8 @@ deleteJobCmd job =
 createJobCmd : Job -> Cmd Msg
 createJobCmd job =
     ConnectionUtil.post "/jobs" (job |> asJobWithoutEmptyCommands) jobEncoder jobDecoder JobStored
+
+
+runJobCmd : Job -> Cmd Msg
+runJobCmd job =
+    ConnectionUtil.get ("/run/" ++ job.id) execResultDecoder JobStarted

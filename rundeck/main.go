@@ -30,7 +30,7 @@ func main() {
 	executions = db.C("executions")
 
 	router := mux.NewRouter()
-	router.HandleFunc("/run/{jobid}", RunJob).Methods("POST")
+	router.HandleFunc("/run/{jobid}", RunJob).Methods("GET")
 	router.HandleFunc("/results", GetResults).Methods("GET")
 	router.HandleFunc("/results/{id}", GetResult).Methods("GET")
 

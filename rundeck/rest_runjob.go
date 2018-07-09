@@ -52,6 +52,13 @@ func execJob(exec JobExecution, availableServers []Server) {
 	wg.Add(len(targetServers))
 
 	var execResults []JobExecutionServer
+
+	for _, server := range targetServers {
+		execResults = append(execResults, JobExecutionServer{
+			Server: server.ID,
+		})
+	}
+
 	for i, server := range targetServers {
 		go func(i int, server Server) {
 			defer wg.Done()
