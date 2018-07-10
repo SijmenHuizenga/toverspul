@@ -19,7 +19,7 @@ type alias Model =
 type ModalModel
     = ModalJob Job
     | ModalServer Server
-    | ModalExecResult ExecResult
+    | ModalLogs ( String, String )
 
 
 type ModalModus
@@ -42,7 +42,7 @@ setJobTitle newTitle job =
 
 setJobCommands : String -> Job -> Job
 setJobCommands newCommands job =
-    { job | commands = String.split "\n " newCommands }
+    { job | commands = String.split "\n" newCommands }
 
 
 setJobHostnamePattern : String -> Job -> Job

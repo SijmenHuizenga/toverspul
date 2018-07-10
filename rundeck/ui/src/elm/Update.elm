@@ -2,9 +2,9 @@ module Update exposing (..)
 
 import Bootstrap.Modal as BSModal
 import Commands exposing (..)
-import Components.Common exposing (makeErrorMessage)
 import Components.Job exposing (..)
 import Components.Server exposing (..)
+import Errors exposing (makeErrorMessage)
 import Message exposing (Msg(..))
 import Model exposing (..)
 
@@ -40,7 +40,7 @@ update msg model =
                         Edit ->
                             updateServerCmd server
 
-                ModalExecResult result ->
+                _ ->
                     Cmd.none
             )
 
@@ -53,7 +53,7 @@ update msg model =
                 ModalServer server ->
                     deleteServerCmd server
 
-                ModalExecResult result ->
+                _ ->
                     Cmd.none
             )
 

@@ -1,4 +1,4 @@
-module Components.Common exposing (..)
+module Errors exposing (..)
 
 import Bootstrap.Alert as Alert
 import Html exposing (Html, text)

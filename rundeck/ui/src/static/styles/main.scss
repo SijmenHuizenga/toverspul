@@ -2,4 +2,29 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 @import '~bootstrap/scss/_mixins.scss';
 @import '~bootstrap/scss/bootstrap.scss';
 
-// can add Boostrap overrides, additional Sass/CSS below...
+.container {
+  padding-top: 50px
+}
+
+small.vertical-align-top {
+  vertical-align: top;
+}
+
+.modal-body{
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+table .no-top-border tbody tr:first-child td {
+  border-top: 0
+}
+table .no-top-border {
+  margin-bottom: 0
+}
+ul.list-unstyled {
+  margin-bottom: 0
+}
+
+.cardy {
+  margin-bottom: 50px
+}

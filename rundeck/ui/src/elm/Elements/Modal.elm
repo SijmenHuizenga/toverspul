@@ -1,12 +1,12 @@
 module Elements.Modal exposing (..)
 
 import Bootstrap.Modal as BSModal
-import Elements.ExecResultModal
 import Elements.JobEditModal
+import Elements.LogsModal
 import Elements.ServerModal
 import Html exposing (Html, div)
 import Message exposing (Msg(CloseModal))
-import Model exposing (ModalModel(ModalExecResult, ModalJob, ModalServer), ModalModus)
+import Model exposing (ModalModel(ModalJob, ModalLogs, ModalServer), ModalModus)
 
 
 viewModalHeader : ModalModel -> ModalModus -> List (Html.Html Msg)
@@ -18,8 +18,8 @@ viewModalHeader model mode =
         ModalServer server ->
             Elements.ServerModal.viewModalHeader server mode
 
-        ModalExecResult result ->
-            Elements.ExecResultModal.viewModalHeader result mode
+        ModalLogs ( title, logs ) ->
+            Elements.LogsModal.viewModalHeader title logs
 
 
 viewModalBody : ModalModel -> ModalModus -> List (Html.Html Msg)
@@ -31,8 +31,8 @@ viewModalBody model mode =
         ModalServer server ->
             Elements.ServerModal.viewModalBody server mode
 
-        ModalExecResult result ->
-            Elements.ExecResultModal.viewModalBody result mode
+        ModalLogs ( title, logs ) ->
+            Elements.LogsModal.viewModalBody title logs
 
 
 viewModalFooter : ModalModel -> ModalModus -> List (Html.Html Msg)
@@ -44,8 +44,8 @@ viewModalFooter model mode =
         ModalServer server ->
             Elements.ServerModal.viewModalFooter server mode
 
-        ModalExecResult result ->
-            Elements.ExecResultModal.viewModalFooter result mode
+        ModalLogs ( title, logs ) ->
+            Elements.LogsModal.viewModalFooter title logs
 
 
 viewModal : ModalModel -> ModalModus -> BSModal.Visibility -> Html Msg
