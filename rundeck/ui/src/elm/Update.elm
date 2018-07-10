@@ -4,6 +4,7 @@ import Bootstrap.Modal as BSModal
 import Commands exposing (..)
 import Components.Job exposing (..)
 import Components.Server exposing (..)
+import Elements.ExecResultsTable exposing (logsTitle)
 import Errors exposing (makeErrorMessage)
 import Message exposing (Msg(..))
 import Model exposing (..)
@@ -122,7 +123,7 @@ update msg model =
 
         JobStarted _ ->
             --todo: display & handle error
-            ( model, Cmd.none )
+            ( model, getResultsCmd )
 
         --- SERVERS
         GetServers ->
@@ -161,7 +162,15 @@ update msg model =
             ( model, getResultsCmd )
 
         ResultsReceived (Ok results) ->
-            ( { model | results = results |> List.sortBy .startTimestamp |> List.reverse }, Cmd.none )
+            ( { model
+                | results =
+                    results
+                        |> List.sortBy .startTimestamp
+                        |> List.reverse
+                        |> List.take 5
+              }
+            , Cmd.none
+            )
 
         ResultsReceived (Err httpError) ->
             ( { model | errorMessage = Just (makeErrorMessage httpError) }, Cmd.none )

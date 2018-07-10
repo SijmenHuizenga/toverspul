@@ -1,4 +1,4 @@
-module Elements.ExecResultsTable exposing (viewResultsTable)
+module Elements.ExecResultsTable exposing (logsTitle, viewResultsTable)
 
 import Bootstrap.Badge as Badge
 import Bootstrap.Button as Button
@@ -98,6 +98,8 @@ viewTimeElapsed start finish =
     in
     if elapsed == 0 then
         "returned immediately"
+    else if elapsed < 0 then
+        "running..."
     else
         toString elapsed
             ++ " second"

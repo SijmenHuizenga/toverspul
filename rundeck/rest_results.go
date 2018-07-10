@@ -6,7 +6,7 @@ import (
 
 func GetResults(w http.ResponseWriter, r *http.Request) {
 	var result []JobExecution
-	err := executions.Find(nil).All(&result)
+	err := executions.Find(nil).Sort("-starttimestamp").Limit(5).All(&result)
 	if err != nil {
 		failOnError(err, w)
 	} else {

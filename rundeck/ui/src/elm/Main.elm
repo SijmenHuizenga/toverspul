@@ -12,10 +12,11 @@ import Elements.JobsTable exposing (viewJobsTable)
 import Elements.Modal exposing (viewModal)
 import Elements.ServersTable exposing (viewServersTable)
 import Errors exposing (viewErrorMessage)
-import Html exposing (Html, div, h4, h5, program, text)
+import Html exposing (Html, div, h4, h5, program, small, text)
 import Html.Attributes exposing (class)
-import Message exposing (Msg(CloseModal, DismissAlert))
+import Message exposing (Msg(CloseModal, DismissAlert, GetResults))
 import Model exposing (ModalModel(ModalJob), ModalModus(New), Model)
+import Time exposing (second)
 import Update exposing (update)
 
 
@@ -37,8 +38,13 @@ main =
         { init = ( init, refreshAllCmd )
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every (toFloat 5000) (\t -> GetResults)
 
 
 view : Model -> Html Msg
@@ -48,7 +54,7 @@ view model =
         , Grid.container []
             [ viewErrorMessage model.errorMessage DismissAlert
             , cardy
-                [ Block.titleH4 [] [ text "Execution Results" ]
+                [ Block.titleH4 [] [ text "Execution Results ", small [ class "text-muted" ] [ text " (last 5)" ] ]
                 , Block.custom
                     (viewResultsTable
                         model.results
