@@ -13,7 +13,7 @@ viewServersTable : List Server -> Html Msg
 viewServersTable servers =
     div []
         [ Table.table
-            { options = [ Table.striped, Table.hover ]
+            { options = []
             , thead =
                 Table.simpleThead
                     [ Table.th [] [ text "Hostname" ]

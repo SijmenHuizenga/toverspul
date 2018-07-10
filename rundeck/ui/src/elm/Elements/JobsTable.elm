@@ -13,7 +13,7 @@ viewJobsTable : List Job -> Html Msg
 viewJobsTable jobs =
     div []
         [ Table.table
-            { options = [ Table.striped, Table.hover ]
+            { options = []
             , thead =
                 Table.simpleThead
                     [ Table.th [] [ text "Title" ]
@@ -41,6 +41,7 @@ viewJobRow job =
         , Table.td [] [ text (String.join ", " job.commands) ]
         , Table.td []
             [ Button.button [ Button.info, Button.attrs [ onClick (OpenModal (ModalJob job) Edit) ] ] [ text "Edit" ]
+            , text " "
             , Button.button [ Button.warning, Button.attrs [ onClick (RunJob job) ] ] [ text "Run" ]
             ]
         ]

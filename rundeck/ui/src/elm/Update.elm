@@ -161,7 +161,7 @@ update msg model =
             ( model, getResultsCmd )
 
         ResultsReceived (Ok results) ->
-            ( { model | results = results }, Cmd.none )
+            ( { model | results = results |> List.sortBy .startTimestamp |> List.reverse }, Cmd.none )
 
         ResultsReceived (Err httpError) ->
             ( { model | errorMessage = Just (makeErrorMessage httpError) }, Cmd.none )

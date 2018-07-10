@@ -1,5 +1,6 @@
 module Elements.ExecResultsTable exposing (viewResultsTable)
 
+import Bootstrap.Badge as Badge
 import Bootstrap.Button as Button
 import Bootstrap.Table as Table
 import Date
@@ -43,10 +44,36 @@ viewExecutionsTable results =
 viewExecutionRow : ExecResultServer -> Table.Row Msg
 viewExecutionRow result =
     Table.tr []
-        [ Table.td [] [ text result.server.hostname ]
-        , Table.td [] [ small [ class "text-muted" ] [ text (" (" ++ result.server.user ++ "@" ++ result.server.ipPort ++ ")") ] ]
-        , Table.td [] [ a [ href "#", onClick (OpenModal (ModalLogs ( "title!", result.logs )) Edit) ] [ text "Logs" ] ]
+        [ Table.td [ Table.cellAttr (class "w20") ] [ text result.server.hostname ]
+        , Table.td [] [ viewStatusBadge result.status ]
+        , Table.td [ Table.cellAttr (class "w20") ]
+            [ a
+                [ href "#"
+                , onClick (OpenModal (ModalLogs ( logsTitle result, result.logs )) Edit)
+                ]
+                [ text "Logs" ]
+            ]
         ]
+
+
+logsTitle : ExecResultServer -> String
+logsTitle result =
+    viewTimestamp result.startTimestamp ++ " " ++ result.server.user ++ "@" ++ result.server.ipPort
+
+
+viewStatusBadge : String -> Html Msg
+viewStatusBadge status =
+    findBadge status [] [ text status ]
+
+
+findBadge : String -> (List (Html.Attribute msg) -> List (Html.Html msg) -> Html.Html msg)
+findBadge status =
+    if status == "OK" then
+        Badge.badgeSuccess
+    else if String.startsWith "FAILURE" status then
+        Badge.badgeWarning
+    else
+        Badge.badgeSecondary
 
 
 viewTiming : Int -> Int -> List (Html Msg)

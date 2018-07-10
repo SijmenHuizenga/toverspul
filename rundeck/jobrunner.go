@@ -35,19 +35,22 @@ func RunCommandsOnServer(server Server, commands []string) (string, string, int6
 		return err.Error(), StatusStartupConnectionFailure, start, time.Now().Unix()
 	}
 
-	session, err := client.NewSession()
-	defer client.Close()
-
-	if err != nil {
-		return err.Error(), StatusStartupSessionFailure, start, time.Now().Unix()
-	}
-
 	logs := ""
 
 	for _, command := range commands {
+		session, err := client.NewSession()
+
+		if err != nil {
+			client.Close()
+			return err.Error(), StatusStartupSessionFailure, start, time.Now().Unix()
+		}
+
 		logs += "$ " + command + "\n"
+
 		out, err := session.CombinedOutput(command)
 		logs += string(out) + "\n\n"
+		session.Close()
+
 		if err != nil {
 			logs += err.Error()
 			return logs, StatusExecutionFailure, start, time.Now().Unix()
