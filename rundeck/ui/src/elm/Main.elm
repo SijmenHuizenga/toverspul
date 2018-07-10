@@ -1,10 +1,19 @@
 module Main exposing (..)
 
+import Bootstrap.Alert as Alert
 import Bootstrap.Grid as Grid
-import Components.ExecResult exposing (viewResultsTable)
-import Components.Job exposing (viewJobsTable)
-import Components.Server exposing (viewServersTable)
+import Bootstrap.Modal as BSModal
+import Commands exposing (refreshAllCmd)
+import ConnectionUtil
+import Elements.ExecResultsTable exposing (viewResultsTable)
+import Elements.JobsTable exposing (viewJobsTable)
+import Elements.ServersTable exposing (viewServersTable)
 import Html exposing (..)
+import Http
+import Json.Decode
+import Message exposing (Msg(CloseModal))
+import Model exposing (ExecResult, Job, ModalModel(ModalJob, ModalServer), Model, Server, execResultDecoder)
+import Update exposing (update)
 
 
 -- APP
@@ -12,10 +21,11 @@ import Html exposing (..)
 
 init : Model
 init =
-    { jobsmodel = Components.Job.init
-    , serversmodel = Components.Server.init
-    , execresultmodel = Components.ExecResult.init
-    , error = ""
+    { errorMessage = Nothing
+    , modalvisability = BSModal.hidden
+    , jobs = []
+    , servers = []
+    , errorMessage = Nothing
     }
 
 
@@ -29,105 +39,35 @@ main =
         }
 
 
-refreshAllCmd : Cmd Msg
-refreshAllCmd =
-    Cmd.batch
-        [ Cmd.map JobMsg Components.Job.getJobsCmd
-        , Cmd.map ServerMsg Components.Server.getServersCmd
-        , Cmd.map ExecresultMsg Components.ExecResult.getResultsCmd
+viewModalHeader : ModalModel -> List (Html.Html msg)
+viewModalHeader ModalJob modalmodel =
+    [ h3 [] [ text "Job" ] ]
+viewModalHeader ModalServer modalmodel =
+    [ h3 [] [ text "Server" ] ]
+
+
+viewModal : ModalModel -> BSModal.Visibility -> Html Msg
+viewModal modalmodel visability =
+    div []
+        [ BSModal.config CloseModal
+            |> BSModal.large
+            |> BSModal.hideOnBackdropClick True
+            |> BSModal.header [] viewModalHeader modalmodel
+            |> BSModal.body [] viewModalHeader modalmodel
+            |> BSModal.footer [] viewModalHeader modalmodel
+            |> BSModal.view visability
         ]
-
-
-
--- MODEL
-
-
-type alias JobsModel =
-    Components.Job.Model
-
-
-type alias ServersModel =
-    Components.Server.Model
-
-
-type alias ExecresultModel =
-    Components.ExecResult.Model
-
-
-type alias Model =
-    { jobsmodel : JobsModel
-    , serversmodel : ServersModel
-    , execresultmodel : ExecresultModel
-    , error : String
-    }
-
-
-
--- UPDATE
-
-
-type Msg
-    = NoOp
-    | JobMsg Components.Job.Msg
-    | ServerMsg Components.Server.Msg
-    | ExecresultMsg Components.ExecResult.Msg
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        JobMsg msg_ ->
-            let
-                ( jobsmodel_, cmd_ ) =
-                    Components.Job.update msg_ model.jobsmodel
-            in
-            ( { model | jobsmodel = jobsmodel_ }, Cmd.map JobMsg cmd_ )
-
-        ServerMsg msg_ ->
-            let
-                ( serversmodel_, cmd_ ) =
-                    Components.Server.update msg_ model.serversmodel
-            in
-            ( { model | serversmodel = serversmodel_ }, Cmd.map ServerMsg cmd_ )
-
-        ExecresultMsg msg_ ->
-            let
-                ( execresultmodel_, cmd_ ) =
-                    Components.ExecResult.update msg_ model.execresultmodel
-            in
-            ( { model | execresultmodel = execresultmodel_ }, Cmd.map ExecresultMsg cmd_ )
-
-        NoOp ->
-            ( model, Cmd.none )
-
-
-
--- VIEW
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ Html.map JobMsg (Components.Job.viewModal model.jobsmodel)
-        , Html.map ServerMsg (Components.Server.viewModal model.serversmodel)
-        , Html.map ExecresultMsg (Components.ExecResult.viewModal model.execresultmodel)
+        [ viewModal model
         , Grid.container []
             [ Grid.row []
                 [ Grid.col []
                     [ p [] [ text model.error ]
-                    , Html.map JobMsg (viewJobsTable model.jobsmodel)
-                    ]
-                ]
-            , Grid.row []
-                [ Grid.col []
-                    [ p [] [ text model.error ]
-                    , Html.map ServerMsg (viewServersTable model.serversmodel)
-                    ]
-                ]
-            , Grid.row []
-                [ Grid.col []
-                    [ p [] [ text model.error ]
-                    , Html.map ExecresultMsg (viewResultsTable model.execresultmodel)
+                    , viewResultsTable model.execresultmodel.results
                     ]
                 ]
             ]

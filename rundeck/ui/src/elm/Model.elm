@@ -1,7 +1,30 @@
 module Model exposing (..)
 
+import Bootstrap.Modal as BSModal
 import Json.Decode as Decode
 import Json.Encode as Encode
+
+
+type alias Model =
+    { errorMessage : Maybe String
+    , results : List ExecResult
+    , jobs : List Job
+    , servers : List Server
+    , modalvisability : BSModal.Visibility
+    , modalmodel : ModalModel
+    , modalmodus : ModalModus
+    }
+
+
+type ModalModel
+    = ModalJob Job
+    | ModalServer Server
+    | ModalExecResult ExecResult
+
+
+type ModalModus
+    = New
+    | Edit
 
 
 type alias Job =

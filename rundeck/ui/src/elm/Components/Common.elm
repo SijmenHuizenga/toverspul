@@ -5,11 +5,6 @@ import Html exposing (Html, text)
 import Http
 
 
-type ModalModus
-    = New
-    | Edit
-
-
 makeErrorMessage : Http.Error -> String
 makeErrorMessage err =
     toString err
