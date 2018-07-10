@@ -1,31 +1,29 @@
 module Main exposing (..)
 
-import Bootstrap.Alert as Alert
 import Bootstrap.Grid as Grid
 import Bootstrap.Modal as BSModal
 import Commands exposing (refreshAllCmd)
-import ConnectionUtil
+import Components.Common exposing (viewErrorMessage)
+import Components.Job exposing (emptyJob)
 import Elements.ExecResultsTable exposing (viewResultsTable)
 import Elements.JobsTable exposing (viewJobsTable)
+import Elements.Modal exposing (viewModal)
 import Elements.ServersTable exposing (viewServersTable)
-import Html exposing (..)
-import Http
-import Json.Decode
-import Message exposing (Msg(CloseModal))
-import Model exposing (ExecResult, Job, ModalModel(ModalJob, ModalServer), Model, Server, execResultDecoder)
+import Html exposing (Html, div, program)
+import Message exposing (Msg(CloseModal, DismissAlert))
+import Model exposing (ModalModel(ModalJob), ModalModus(New), Model)
 import Update exposing (update)
-
-
--- APP
 
 
 init : Model
 init =
     { errorMessage = Nothing
-    , modalvisability = BSModal.hidden
+    , results = []
     , jobs = []
     , servers = []
-    , errorMessage = Nothing
+    , modalvisability = BSModal.hidden
+    , modalmodel = ModalJob emptyJob
+    , modalmodus = New
     }
 
 
@@ -39,36 +37,14 @@ main =
         }
 
 
-viewModalHeader : ModalModel -> List (Html.Html msg)
-viewModalHeader ModalJob modalmodel =
-    [ h3 [] [ text "Job" ] ]
-viewModalHeader ModalServer modalmodel =
-    [ h3 [] [ text "Server" ] ]
-
-
-viewModal : ModalModel -> BSModal.Visibility -> Html Msg
-viewModal modalmodel visability =
-    div []
-        [ BSModal.config CloseModal
-            |> BSModal.large
-            |> BSModal.hideOnBackdropClick True
-            |> BSModal.header [] viewModalHeader modalmodel
-            |> BSModal.body [] viewModalHeader modalmodel
-            |> BSModal.footer [] viewModalHeader modalmodel
-            |> BSModal.view visability
-        ]
-
-
 view : Model -> Html Msg
 view model =
     div []
-        [ viewModal model
+        [ viewModal model.modalmodel model.modalmodus model.modalvisability
         , Grid.container []
-            [ Grid.row []
-                [ Grid.col []
-                    [ p [] [ text model.error ]
-                    , viewResultsTable model.execresultmodel.results
-                    ]
-                ]
+            [ viewErrorMessage model.errorMessage DismissAlert
+            , Grid.row [] [ Grid.col [] [ viewResultsTable model.results ] ]
+            , Grid.row [] [ Grid.col [] [ viewJobsTable model.jobs ] ]
+            , Grid.row [] [ Grid.col [] [ viewServersTable model.servers ] ]
             ]
         ]

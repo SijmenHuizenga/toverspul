@@ -2,7 +2,7 @@ module Message exposing (..)
 
 import Bootstrap.Alert as Alert
 import Http
-import Model exposing (ExecResult, Job, ModalModel, ModalModus, Server)
+import Model exposing (ExecResult, Job, ModalModel, ModalModus, Server, setServerHostname, setServerIpPort, setServerPrivateKey, setServerUser)
 
 
 type Msg
@@ -12,7 +12,8 @@ type Msg
     | CloseModal
     | ModalSave
     | ModalDelete
-    | SetModalField Fielding
+    | SetJobModalField (String -> Job -> Job) String
+    | SetServerModalField (String -> Server -> Server) String
       --- JOBS
     | GetJobs
     | JobsReceived (Result Http.Error (List Job))
@@ -20,20 +21,29 @@ type Msg
     | JobDeleted (Result Http.Error Job)
     | RunJob Job
     | JobStarted (Result Http.Error ExecResult)
-    | ModelNewTitle String
-    | ModelNewHostnamePattern String
-    | ModelNewCommands String
       --- SERVERS
     | GetServers
     | ServersReceived (Result Http.Error (List Server))
     | ServerStored (Result Http.Error Server)
     | ServerDeleted (Result Http.Error Server)
-    | ModalNewPrivateKey String
-    | ModalNewUser String
-    | ModalNewIpPort String
-    | ModalNewHostname String
       --- RESULTS
     | GetResults
     | ResultsReceived (Result Http.Error (List ExecResult))
       --- ALERT
     | DismissAlert Alert.Visibility
+
+
+setServerHostnameMsg =
+    SetServerModalField setServerHostname
+
+
+setServerIpPortMsg =
+    SetServerModalField setServerIpPort
+
+
+setServerUserMsg =
+    SetServerModalField setServerUser
+
+
+setServerPrivateKeyMsg =
+    SetServerModalField setServerPrivateKey

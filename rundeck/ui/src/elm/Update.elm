@@ -57,6 +57,32 @@ update msg model =
                     Cmd.none
             )
 
+        SetJobModalField setter value ->
+            ( case model.modalmodel of
+                ModalJob job ->
+                    value
+                        |> flip setter job
+                        |> ModalJob
+                        |> asModalModelIn model
+
+                _ ->
+                    model
+            , Cmd.none
+            )
+
+        SetServerModalField setter value ->
+            ( case model.modalmodel of
+                ModalServer server ->
+                    value
+                        |> flip setter server
+                        |> ModalServer
+                        |> asModalModelIn model
+
+                _ ->
+                    model
+            , Cmd.none
+            )
+
         --- JOBS
         GetJobs ->
             ( model, getJobsCmd )
@@ -65,7 +91,7 @@ update msg model =
             ( { model | jobs = jobs }, Cmd.none )
 
         JobsReceived (Err httpError) ->
-            ( { model | errorMessage = Just (toString httpError) }, Cmd.none )
+            ( { model | errorMessage = Just (makeErrorMessage httpError) }, Cmd.none )
 
         JobStored (Ok job) ->
             ( model
@@ -98,28 +124,6 @@ update msg model =
             --todo: display & handle error
             ( model, Cmd.none )
 
-        ModelNewTitle newTitle ->
-            ( newTitle
-                |> asJobTitleIn (ModalJob model.modalmodel)
-                |> asModalModelIn model
-            , Cmd.none
-            )
-
-        ModelNewHostnamePattern newPattern ->
-            ( newPattern
-                |> asJobPatternIn model.modalJob
-                |> asModalModelIn model
-            , Cmd.none
-            )
-
-        ModelNewCommands newCommands ->
-            ( newCommands
-                |> String.split "\n"
-                |> asJobCommands model.modalJob
-                |> asModalModelIn model
-            , Cmd.none
-            )
-
         --- SERVERS
         GetServers ->
             ( model, getServersCmd )
@@ -128,7 +132,7 @@ update msg model =
             ( { model | servers = servers }, Cmd.none )
 
         ServersReceived (Err httpError) ->
-            ( { model | errorMessage = Just (toString httpError) }, Cmd.none )
+            ( { model | errorMessage = Just (makeErrorMessage httpError) }, Cmd.none )
 
         ServerStored (Ok server) ->
             ( model
@@ -151,34 +155,6 @@ update msg model =
 
         ServerDeleted (Err httpError) ->
             ( { model | errorMessage = Just (makeErrorMessage httpError) }, Cmd.none )
-
-        ModalNewPrivateKey newVal ->
-            ( newVal
-                |> asPrivateKeyIn model.modalServer
-                |> asModalModelIn model
-            , Cmd.none
-            )
-
-        ModalNewUser newVal ->
-            ( newVal
-                |> asUserIn model.modalServer
-                |> asModalModelIn model
-            , Cmd.none
-            )
-
-        ModalNewIpPort newVal ->
-            ( newVal
-                |> asIpPortIn model.modalServer
-                |> asModalModelIn model
-            , Cmd.none
-            )
-
-        ModalNewHostname newVal ->
-            ( newVal
-                |> asHostnameIn model.modalServer
-                |> asModalModelIn model
-            , Cmd.none
-            )
 
         ---RESULTS
         GetResults ->

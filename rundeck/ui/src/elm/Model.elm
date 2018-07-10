@@ -40,29 +40,14 @@ setJobTitle newTitle job =
     { job | title = newTitle }
 
 
-setJobCommands : List String -> Job -> Job
+setJobCommands : String -> Job -> Job
 setJobCommands newCommands job =
-    { job | commands = newCommands }
+    { job | commands = String.split "\n " newCommands }
 
 
 setJobHostnamePattern : String -> Job -> Job
 setJobHostnamePattern newHostnamePattern job =
     { job | hostnamePattern = newHostnamePattern }
-
-
-asJobTitleIn : Job -> String -> Job
-asJobTitleIn =
-    flip setJobTitle
-
-
-asJobPatternIn : Job -> String -> Job
-asJobPatternIn =
-    flip setJobHostnamePattern
-
-
-asJobCommands : Job -> List String -> Job
-asJobCommands =
-    flip setJobCommands
 
 
 asJobWithoutEmptyCommands : Job -> Job
@@ -119,23 +104,23 @@ serverEncoder server =
         ]
 
 
-asPrivateKeyIn : Server -> String -> Server
-asPrivateKeyIn server newPrivateKey =
+setServerPrivateKey : String -> Server -> Server
+setServerPrivateKey newPrivateKey server =
     { server | privateKey = newPrivateKey }
 
 
-asUserIn : Server -> String -> Server
-asUserIn server newUser =
+setServerUser : String -> Server -> Server
+setServerUser newUser server =
     { server | user = newUser }
 
 
-asIpPortIn : Server -> String -> Server
-asIpPortIn server newIpPort =
+setServerIpPort : String -> Server -> Server
+setServerIpPort newIpPort server =
     { server | ipPort = newIpPort }
 
 
-asHostnameIn : Server -> String -> Server
-asHostnameIn server newHostname =
+setServerHostname : String -> Server -> Server
+setServerHostname newHostname server =
     { server | hostname = newHostname }
 
 
