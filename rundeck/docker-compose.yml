@@ -1,0 +1,11 @@
+version: "3"
+services:
+  rundeck:
+    image: sijmenhuizenga/randomapps:toverspul-rundeck
+    ports:
+      - 8080:80
+    environment:
+      MONGO_SERVER: db:27017
+      PORT: "80"
+  db:
+    image: mongo

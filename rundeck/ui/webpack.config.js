@@ -16,7 +16,7 @@ const isDev = TARGET_ENV == dev;
 const isProd = TARGET_ENV == prod;
 
 // entry and output path/filename variables
-const entryPath = path.join(__dirname, 'src/static/index.js');
+const entryPath = path.join(__dirname, 'res/index.js');
 const outputPath = path.join(__dirname, 'dist');
 const outputFilename = isProd ? '[name]-[hash].js' : '[name].js'
 
@@ -26,7 +26,7 @@ console.log('WEBPACK GO! Building for ' + TARGET_ENV);
 var commonConfig = {
     output: {
         path: outputPath,
-        filename: `static/js/${outputFilename}`,
+        filename: `js/${outputFilename}`,
     },
     resolve: {
         extensions: ['.js', '.elm'],
@@ -36,7 +36,7 @@ var commonConfig = {
         noParse: /\.elm$/,
         rules: [{
             test: /\.(eot|ttf|woff|woff2|svg)$/,
-            use: 'file-loader?publicPath=../../&name=static/css/[hash].[ext]'
+            use: 'file-loader?publicPath=../../&name=css/[hash].[ext]'
         }]
     },
     plugins: [
@@ -46,7 +46,7 @@ var commonConfig = {
             }
         }),
         new HtmlWebpackPlugin({
-            template: 'src/static/index.html',
+            template: 'res/index.html',
             inject: 'body',
             filename: 'index.html'
         })
@@ -105,14 +105,12 @@ if (isProd === true) {
         },
         plugins: [
             new ExtractTextPlugin({
-                filename: 'static/css/[name]-[hash].css',
+                filename: 'css/[name]-[hash].css',
                 allChunks: true,
             }),
             new CopyWebpackPlugin([{
-                from: 'src/static/img/',
-                to: 'static/img/'
-            }, {
-                from: 'src/favicon.ico'
+                from: 'res/img/',
+                to: 'img/'
             }]),
 
             // extract CSS into a separate file

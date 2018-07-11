@@ -1,5 +1,13 @@
 *.iml
 .idea
+*.upx
+
 do-deployer/settings.conf
-rundeck/settings.conf
-rundeck/toverspul-rundeck
+rundeck/dist
+rundeck/backend/toverspul-rundeck
+
+rundeck/ui/elm-stuff/
+rundeck/ui/node_modules/
+rundeck/ui/tmp/
+rundeck/ui/dist/
+rundeck/ui/yarn.lock

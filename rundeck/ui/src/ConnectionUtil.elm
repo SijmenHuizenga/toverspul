@@ -5,9 +5,12 @@ import Json.Decode
 import Json.Encode
 
 
+--todo: make dynamic based on environment
+
+
 baseurl : String
 baseurl =
-    "http://localhost:8090"
+    ""
 
 
 get : String -> Json.Decode.Decoder a -> (Result Http.Error a -> msg) -> Cmd msg

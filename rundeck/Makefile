@@ -1,13 +1,23 @@
-all: compile-backend compress-backend
+all: compile combine
 
-compile-backend:
-	go build -i -o toverspul-rundeck
+publish: all dockerize dockerpush
 
-run-backend: compile-backend
-	./toverspul-rundeck
+compile:
+	cd ui && make
+	cd backend && make
 
-run-frontend:
-	cd ui && npm start
+combine:
+	rm -rf dist
+	mkdir dist
+	cp backend/toverspul-rundeck dist/toverspul-rundeck
+	mkdir dist/static
+	cp -r ui/dist/* dist/static/
 
-compress-backend:
-	upx --brute toverspul-rundeck
+dockerize:
+	cd dist && docker build -t sijmenhuizenga/randomapps:toverspul-rundeck -f ../Dockerfile .
+
+dockerun:
+	docker-compose up
+
+dockerpush:
+	docker push sijmenhuizenga/randomapps:toverspul-rundeck

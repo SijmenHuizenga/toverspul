@@ -4,10 +4,10 @@ import (
 	"gopkg.in/mgo.v2"
 	"log"
 	"os"
-	"github.com/BurntSushi/toml"
 	"net/http"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
+	"strings"
 )
 
 var servers *mgo.Collection
@@ -15,9 +15,13 @@ var jobs *mgo.Collection
 var executions *mgo.Collection
 
 func main() {
-	config := ReadConfig()
+	port := os.Getenv("PORT")
+	mongoServer := os.Getenv("MONGO_SERVER")
+	if strings.TrimSpace(port) == "" {
+		log.Fatal("Port not provided")
+	}
 
-	session, err := mgo.Dial(config.MongoServer)
+	session, err := mgo.Dial(mongoServer)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,19 +57,7 @@ func main() {
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
 
-	log.Fatal(http.ListenAndServe(":8090", handlers.CORS(originsOk, headersOk, methodsOk)(router)))
-}
+	log.Println("Starting server on :"+port)
 
-func ReadConfig() Config {
-	var configfile = "./settings.conf"
-	_, err := os.Stat(configfile)
-	if err != nil {
-		log.Fatal("Config file is missing: ", configfile)
-	}
-
-	var config Config
-	if _, err := toml.DecodeFile(configfile, &config); err != nil {
-		log.Fatal(err)
-	}
-	return config
+	log.Fatal(http.ListenAndServe(":"+port, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
 }
