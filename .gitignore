@@ -3,9 +3,10 @@
 *.upx
 
 do-deployer/settings.conf
+certbotbot/toverspul-certbotbot
+
 rundeck/dist
 rundeck/backend/toverspul-rundeck
-
 rundeck/ui/elm-stuff/
 rundeck/ui/node_modules/
 rundeck/ui/tmp/

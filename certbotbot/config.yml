@@ -1,0 +1,15 @@
+---
+httpport: 8888
+email: example@example.com
+googlecredentialsfilepath: unset
+certs:
+  - domain: sijmen.it
+    challenge: http
+    subdomains:
+      - back-a.sijmen.it
+      - back-b.sijmen.it
+      - test.sijmen.it
+  - domain: "*.toverspul.nl"
+    challenge: googledns
+    subdomains: []
+
