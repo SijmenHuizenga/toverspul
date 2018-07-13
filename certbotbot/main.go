@@ -4,15 +4,15 @@ import "time"
 import (
 	"io/ioutil"
 	"log"
-	"os"
 	"os/exec"
+	"errors"
 )
 
 type Config struct {
-	Email    string
-	HttpPort string
+	Email                     string
+	HttpPort                  string
 	GoogleCredentialsFilePath string
-	Domains  []CertConfig
+	Domains                   []CertConfig
 }
 
 type CertConfig struct {
@@ -22,12 +22,7 @@ type CertConfig struct {
 }
 
 func main() {
-	data, err := ioutil.ReadFile(os.Getenv("CONFIGFILE"))
-	if err != nil {
-		log.Fatal("Couldn't read config file '" + os.Getenv("CONFIGFILE") + "' " + err.Error())
-	}
-
-	config := loadConfig(data)
+	config := loadConfig(readFile("/certbotbot-config.yaml"))
 
 	log.Println("Loaded config: ", config)
 
@@ -44,17 +39,27 @@ func main() {
 func checkUpdates(config Config) {
 	for _, domainConfig := range config.Domains {
 		checkUpdate(domainConfig, config)
+
+		pem, err := getPem(domainConfig.Domain)
+		if err == nil {
+			storePem(domainConfig.Domain, pem)
+		} else {
+			log.Println(err)
+		}
 	}
 }
-func checkUpdate(domainConfig CertConfig, config Config) {
-	log.Println("Checking updates for " + domainConfig.Domain)
+func checkUpdate(domainConfig CertConfig, config Config) error {
+	log.Println("Running certbot for " + domainConfig.Domain)
 
-	// check if directory exists in /etc/letsencrypt/live/
-	// if exists than run the renew command for only this domain
-	// else run the thing below
-
+	// this set of commands creates a certificate if it doesnt exist.
+	// updates it if it needs updating
+	// if the cert exist but more subdomains are added than the cert is renewed to match the new domains
 	args := []string{
-		"certonly", "--dry-run", "--staging", "--non-interactive", "--agree-tos", "--email", config.Email,
+		"certonly", "--dry-run", "--staging", "--non-interactive", "--agree-tos", "--renew-with-new-domains", "--expand",
+		"--config-dir", "/certbotbot/le-config",
+		"--work-dir", "/certbotbot/le-work",
+		"--logs-dir", "/certbotbot/le-logs",
+		"--email", config.Email,
 		"-d", domainConfig.Domain,
 	}
 
@@ -70,18 +75,40 @@ func checkUpdate(domainConfig CertConfig, config Config) {
 		args = append(args, "--dns-google", "--dns-google-credentials", config.GoogleCredentialsFilePath)
 		break
 	default:
-		log.Println("Challenge type " + domainConfig.Challenge + " not supported")
+		return errors.New("Challenge type " + domainConfig.Challenge + " not supported")
 	}
 
 	log.Println("$ certbot ", args)
 	cmd := exec.Command("certbot", args...)
 	output, err := cmd.CombinedOutput()
 	log.Print(string(output))
-	if err != nil {
-		log.Println(err)
+	return err
+}
+
+func getPem(domain string) (string, error) {
+	pt1, e1 := ioutil.ReadFile("/etc/letsencrypt/live/" + domain + "/fullchain.pem")
+	pt2, e2 := ioutil.ReadFile("/etc/letsencrypt/live/" + domain + "/privkey.pem")
+
+	if e1 != nil || e2 != nil {
+		return "", errors.New(e1.Error() + " | " + e2.Error())
 	}
 
-	//make a pem file as described in (https://serversforhackers.com/c/letsencrypt-with-haproxy)
+	return string(pt1) + string(pt2), nil
+}
 
-	//place it in a directory that is specified by some config property
+func storePem(domain string, pem string) {
+	filename := "/certbotbot/certs/" + domain + ".pem"
+	err := ioutil.WriteFile(filename, []byte(pem), 0644)
+	if err != nil {
+		log.Println("ERROR: Couldn't write pem file '" + filename + "': " + err.Error())
+	}
+}
+
+func readFile(filename string) []byte {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Println("ERROR: Couldn't read file '" + filename + "': " + err.Error())
+		return []byte{}
+	}
+	return data
 }

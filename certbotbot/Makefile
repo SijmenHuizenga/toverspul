@@ -10,4 +10,7 @@ dockerize:
 	docker build -t sijmenhuizenga/randomapps:toverspul-certbotbot .
 
 dockerun:
-	docker run -v "${PWD}/config.yml":/config.yml sijmenhuizenga/randomapps:toverspul-certbotbot
+	docker run -v "${PWD}/config.yml":/certbotbot-config.yaml sijmenhuizenga/randomapps:toverspul-certbotbot
+
+dockerpush:
+	docker push sijmenhuizenga/randomapps:toverspul-certbotbot
