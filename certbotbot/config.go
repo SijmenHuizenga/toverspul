@@ -27,11 +27,23 @@ func loadConfig(data []byte) Config {
 		log.Fatal("Config file field googlecredentialsfilepath not found: " + err.Error())
 	}
 
+	staging, err := y.Get("staging").Bool()
+	if err != nil {
+		log.Fatal("Config file field staging not found: " + err.Error())
+	}
+
+	dryrun, err := y.Get("dryrun").Bool()
+	if err != nil {
+		log.Fatal("Config file field dryrun not found: " + err.Error())
+	}
+
 	return Config{
 		Email: email,
 		HttpPort: strconv.Itoa(httpport),
 		GoogleCredentialsFilePath: gcreds,
 		Domains: loadDomainsConfig(y.Get("certs")),
+		DryRun: dryrun,
+		Staging: staging,
 	}
 }
 
@@ -59,6 +71,7 @@ func makeCertConfig(configpart interface{}) CertConfig {
 	}
 
 	return CertConfig{
+		Name:       get(m, "name").(string),
 		Domain:     get(m, "domain").(string),
 		Challenge:  get(m, "challenge").(string),
 		subdomains: toStrArr(get(m, "subdomains").([]interface{})),

@@ -8,21 +8,30 @@ import (
 	"errors"
 )
 
+const configFile = "/certbotbot-config.yaml"
+const certsDir = "/certbotbot/certs"
+const configDir = "/certbotbot/le-config"
+const workingDir = "/certbotbot/le-work"
+const logsDir = "/certbotbot/le-logs"
+
 type Config struct {
 	Email                     string
 	HttpPort                  string
 	GoogleCredentialsFilePath string
 	Domains                   []CertConfig
+	DryRun					  bool
+	Staging					  bool
 }
 
 type CertConfig struct {
+	Name 	   string
 	Domain     string
 	Challenge  string
 	subdomains []string
 }
 
 func main() {
-	config := loadConfig(readFile("/certbotbot-config.yaml"))
+	config := loadConfig(readFile(configFile))
 
 	log.Println("Loaded config: ", config)
 
@@ -40,9 +49,9 @@ func checkUpdates(config Config) {
 	for _, domainConfig := range config.Domains {
 		checkUpdate(domainConfig, config)
 
-		pem, err := getPem(domainConfig.Domain)
+		pem, err := getPem(domainConfig.Name)
 		if err == nil {
-			storePem(domainConfig.Domain, pem)
+			storePem(domainConfig.Name, pem)
 		} else {
 			log.Println(err)
 		}
@@ -55,12 +64,21 @@ func checkUpdate(domainConfig CertConfig, config Config) error {
 	// updates it if it needs updating
 	// if the cert exist but more subdomains are added than the cert is renewed to match the new domains
 	args := []string{
-		"certonly", "--dry-run", "--staging", "--non-interactive", "--agree-tos", "--renew-with-new-domains", "--expand",
-		"--config-dir", "/certbotbot/le-config",
-		"--work-dir", "/certbotbot/le-work",
-		"--logs-dir", "/certbotbot/le-logs",
+		"certonly", "--non-interactive", "--agree-tos", "--renew-with-new-domains", "--expand",
+		"--config-dir", configDir,
+		"--work-dir", workingDir,
+		"--logs-dir", logsDir,
 		"--email", config.Email,
+		"--cert-name", domainConfig.Name,
 		"-d", domainConfig.Domain,
+	}
+
+	if config.DryRun {
+		args = append(args, "--dry-run")
+	}
+
+	if config.Staging {
+		args = append(args, "--staging")
 	}
 
 	for _, domain := range domainConfig.subdomains {
@@ -85,9 +103,9 @@ func checkUpdate(domainConfig CertConfig, config Config) error {
 	return err
 }
 
-func getPem(domain string) (string, error) {
-	pt1, e1 := ioutil.ReadFile("/etc/letsencrypt/live/" + domain + "/fullchain.pem")
-	pt2, e2 := ioutil.ReadFile("/etc/letsencrypt/live/" + domain + "/privkey.pem")
+func getPem(certname string) (string, error) {
+	pt1, e1 := ioutil.ReadFile(configDir + "/live/" + certname + "/fullchain.pem")
+	pt2, e2 := ioutil.ReadFile(configDir +  "/live/" + certname + "/privkey.pem")
 
 	if e1 != nil || e2 != nil {
 		return "", errors.New(e1.Error() + " | " + e2.Error())
@@ -96,8 +114,8 @@ func getPem(domain string) (string, error) {
 	return string(pt1) + string(pt2), nil
 }
 
-func storePem(domain string, pem string) {
-	filename := "/certbotbot/certs/" + domain + ".pem"
+func storePem(certname string, pem string) {
+	filename := certsDir + "/" + certname + ".pem"
 	err := ioutil.WriteFile(filename, []byte(pem), 0644)
 	if err != nil {
 		log.Println("ERROR: Couldn't write pem file '" + filename + "': " + err.Error())

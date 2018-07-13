@@ -2,14 +2,18 @@
 httpport: 8888
 email: example@example.com
 googlecredentialsfilepath: unset
+staging: true
+dryrun: true
 certs:
-  - domain: sijmen.it
+  - name: sijmenit
+    domain: sijmen.it
     challenge: http
     subdomains:
       - back-a.sijmen.it
       - back-b.sijmen.it
       - test.sijmen.it
-  - domain: "*.toverspul.nl"
+  - name: toverspulwildcard
+    domain: "*.toverspul.nl"
     challenge: googledns
     subdomains: []
 

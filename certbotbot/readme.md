@@ -6,13 +6,17 @@ Instructs certbot to request certificates based on a configuration file. Outputs
 httpport: 8888
 email: example@example.com
 googlecredentialsfilepath: /run/secrets/my_secret_data
+staging: true
+dryrun: true
 certs:
-  - domain: example.com
+  - name: examplecom
+    domain: example.com
     challenge: http
     subdomains:
       - a.example.com
       - b.example.com
-  - domain: "*.test.com"
+  - name: testwildcard
+    domain: "*.test.com"
     challenge: googledns
     subdomains: []
 
@@ -22,11 +26,11 @@ To use the challenge `googledns` it requires a google cloud platform service acc
 
 The following things are stored in the following places and should be persistant:
 
-* `/certbotbot/certs` The output certificates
-* `/certbotbot/le-config` The configuration properties created by letsencrypt. 
-* `/certbotbot/le-work` The working directory for letsencrypt. 
-* `/certbotbot/le-logs` The logs file directory created by letsencrypt.
-* `/etc/letsencrypt` Storage for letsencrypt
-* `/var/lib/letsencrypt` More storage for letsencrypt
+* `/certbotbot/certs`       The output certificates
+* `/certbotbot/le-config`   The configuration properties created by letsencrypt. 
+* `/certbotbot/le-work`     The working directory for letsencrypt. 
+* `/certbotbot/le-logs`     The logs file directory created by letsencrypt.
+* `/etc/letsencrypt`        Storage for letsencrypt
+* `/var/lib/letsencrypt`    More storage for letsencrypt
 
-The output of every certificate is `/certbotbot/certs/{domain}.pem`
+The output of every certificate is `/certbotbot/certs/{cert-name}.pem`
