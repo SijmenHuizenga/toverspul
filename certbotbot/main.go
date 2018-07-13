@@ -79,6 +79,8 @@ func checkUpdate(domainConfig CertConfig, config Config) error {
 
 	if config.Staging {
 		args = append(args, "--staging")
+	} else {
+		args = append(args, "--server", "https://acme-v02.api.letsencrypt.org/directory")
 	}
 
 	for _, domain := range domainConfig.subdomains {
