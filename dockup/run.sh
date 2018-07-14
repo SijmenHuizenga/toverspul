@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "* * * * * aws > /proc/\$(cat /var/run/crond.pid)/fd/1 2>&1" > crontab.conf
+echo "$CRON /backup.sh > /proc/\$(cat /var/run/crond.pid)/fd/1 2>&1" > crontab.conf
 
 crontab ./crontab.conf
 
