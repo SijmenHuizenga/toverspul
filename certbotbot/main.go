@@ -6,6 +6,8 @@ import (
 	"log"
 	"os/exec"
 	"errors"
+	"net/http"
+	"fmt"
 )
 
 const configFile = "/certbotbot-config.yaml"
@@ -35,6 +37,8 @@ func main() {
 
 	log.Println("Loaded config: ", config)
 
+	setupHealthCheck()
+
 	ticker := time.NewTicker(5 * time.Minute)
 	checkUpdates(config)
 	for {
@@ -43,6 +47,14 @@ func main() {
 			checkUpdates(config)
 		}
 	}
+}
+func setupHealthCheck() {
+	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Hi there, I <3 certificates")
+	})
+	go func() {
+		log.Fatal(http.ListenAndServe(":80", nil))
+	}()
 }
 
 func checkUpdates(config Config) {

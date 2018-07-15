@@ -34,3 +34,5 @@ The following things are stored in the following places and should be persistant
 * `/var/lib/letsencrypt`    More storage for letsencrypt
 
 The output of every certificate is `/certbotbot/certs/{cert-name}.pem`
+
+Certbotbot starts a webserver on port 80 that always returns OK. This is in place for health-checking the application.

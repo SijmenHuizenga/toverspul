@@ -1,7 +1,7 @@
-all: compile compress
+all: compile compress dockerize
 
 compile:
-	go build -i -o toverspul-certbotbot
+	CGO_ENABLED=0 go build -a -o toverspul-certbotbot
 
 compress:
 	upx --brute toverspul-certbotbot
@@ -10,7 +10,7 @@ dockerize:
 	docker build -t sijmenhuizenga/randomapps:toverspul-certbotbot .
 
 dockerun:
-	docker run -v "${PWD}/config.yml":/certbotbot-config.yaml sijmenhuizenga/randomapps:toverspul-certbotbot
+	docker run -p 80:80 -v "${PWD}/config.yml":/certbotbot-config.yaml sijmenhuizenga/randomapps:toverspul-certbotbot
 
 dockerpush:
 	docker push sijmenhuizenga/randomapps:toverspul-certbotbot
