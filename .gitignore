@@ -12,3 +12,8 @@ rundeck/ui/node_modules/
 rundeck/ui/tmp/
 rundeck/ui/dist/
 rundeck/ui/yarn.lock
+
+dockup/passfile
+dockup/credentials
+dockup/dockup
+dockup/backup
