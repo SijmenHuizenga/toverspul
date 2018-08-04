@@ -1,4 +1,5 @@
 FROM node as ui
+RUN npm install webpack -g
 ADD /ui /src
 WORKDIR /src
 RUN npm install
