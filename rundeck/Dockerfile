@@ -1,9 +1,9 @@
 FROM node as ui
-RUN npm install webpack -g
+RUN npm install -g webpack elm
 ADD /ui /src
 WORKDIR /src
 RUN npm install
-RUN npm run build
+RUN ./node_modules/.bin/webpack
 
 FROM golang:1.10 as backend
 ADD backend /src
