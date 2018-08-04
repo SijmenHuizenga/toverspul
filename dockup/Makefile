@@ -6,15 +6,15 @@ build:
 dockerbuild:
 	docker build -t sijmenhuizenga/randomapps:toverspul-dockup .
 
-# run from cmd line
-
+#RUN FROM COMMAND LINE BECAUSE PWD WON'T WORK IN MAKEFILE
 #dockerun:
 #	docker run \
 #		-v "$(pwd)/backup:/backup" \
 #		-v "$(pwd)/passfile:/run/secrets/passfile" \
 #		-v "$(pwd)/credentials:/run/secrets/aws-credentials" \
+#		-v "/etc/hostname:/etc/hosthostname" \
 #       -e CRON="* * * * *" \
-#       -e BUCKET="s3://toverspuldockup" \
+#       -e BUCKET="toverspuldockup" \
 #		sijmenhuizenga/randomapps:toverspul-dockup
 
 dockerpush:

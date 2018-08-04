@@ -29,11 +29,12 @@ const TarTargetEncrypted = "/tmp.enc"
 const BackupSrcFolder = "/backup"
 const BackupEncryptionKeyfile = "/run/secrets/passfile"
 const CredentialsFile = "/run/secrets/aws-credentials"
+const HostHostefile = "/etc/hosthostname"
 
 func main() {
 	sess, err := openAwsSession()
 
-	encryptionkey, err := ioutil.ReadFile(BackupEncryptionKeyfile) // just pass the file name
+	encryptionkey, err := ioutil.ReadFile(BackupEncryptionKeyfile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,8 +96,16 @@ func deleteIfExist(target string){
 }
 
 func targetfilename(dir string) string {
+	hostnamefile, err := ioutil.ReadFile(HostHostefile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	folderlist := strings.Split(dir, "/")
-	return folderlist[len(folderlist)-1] + "/" + time.Now().Format("2006-01-02 15:04:05") + ".tar.gz.eas256"
+	return folderlist[len(folderlist)-1] + "/" +
+		time.Now().Format("2006-01-02 15:04:05 ") +
+		"[" + strings.TrimSpace(string(hostnamefile)) + "]"+
+		".tar.gz.eas256"
 }
 
 func targz(dir string, targetfile string) error {
