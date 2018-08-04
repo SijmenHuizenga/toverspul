@@ -7,6 +7,7 @@ WORKDIR /src
 RUN go get -d -v
 RUN go build -o /go/bin/dockup
 
+# Actual image
 FROM golang:1.10
 COPY --from=builder /go/bin/dockup /go/bin/dockup
 ENTRYPOINT ["/go/bin/dockup"]

@@ -1,10 +1,7 @@
-all: build dockerbuild
+all: build
 
 build:
-	go build -i -o dockup
-
-dockerbuild:
-	docker build -t sijmenhuizenga/randomapps:toverspul-dockup .
+	docker build -t toverspul-dockup .
 
 #RUN FROM COMMAND LINE BECAUSE PWD WON'T WORK IN MAKEFILE
 #dockerun:
@@ -15,7 +12,4 @@ dockerbuild:
 #		-v "/etc/hostname:/etc/hosthostname" \
 #       -e CRON="* * * * *" \
 #       -e BUCKET="toverspuldockup" \
-#		sijmenhuizenga/randomapps:toverspul-dockup
-
-dockerpush:
-	docker push sijmenhuizenga/randomapps:toverspul-dockup
+#		toverspul-dockup
