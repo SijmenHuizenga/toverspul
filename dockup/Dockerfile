@@ -1,6 +1,5 @@
 # Builder
 FROM golang:1.10 as builder
-
 RUN mkdir /src
 COPY main.go /src
 WORKDIR /src
