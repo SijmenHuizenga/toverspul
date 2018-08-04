@@ -1,9 +1,9 @@
-FROM node as ui
-RUN npm install -g webpack elm
+FROM node:10-stretch as ui
 ADD /ui /src
 WORKDIR /src
 RUN npm install
-RUN ./node_modules/.bin/webpack
+ENV PATH=$PATH:/src/node_modules/.bin
+RUN webpack
 
 FROM golang:1.10 as backend
 ADD backend /src
