@@ -7,7 +7,7 @@
   "scripts": {
     "start": "webpack-dev-server --hot --inline",
     "prebuild": "rimraf dist",
-    "build": "webpack",
+    "build": "./node_modules/.bin/webpack",
     "reinstall": "npm i rimraf && rimraf node_modules && npm uninstall -g elm && npm i -g elm && npm i && elm package install"
   },
   "devDependencies": {
@@ -32,6 +32,6 @@
     "webpack-merge": "^4.1.0"
   },
   "dependencies": {
-    "npm": "^6.1.0"
+    "npm": "^6.3.0"
   }
 }
