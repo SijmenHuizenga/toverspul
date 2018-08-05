@@ -1,0 +1,14 @@
+version: "3"
+services:
+  dockup:
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    volumes:
+      - ./backup:/backup
+      - ./passfile:/run/secrets/passfile
+      - ./credentials:/run/secrets/aws-credentials
+      - /etc/hostname:/etc/hosthostname
+    environment:
+      CRON: "* * * * *"
+      BUCKET: "toverspuldockup"

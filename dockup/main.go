@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"encoding/hex"
 	"crypto/aes"
 	"crypto/cipher"
 	"io"
@@ -18,6 +17,8 @@ import (
 	"time"
 	"strings"
 	"github.com/robfig/cron"
+	"bytes"
+	"syscall"
 )
 
 const EnvBucket = "BUCKET"
@@ -60,6 +61,15 @@ func backup(encryptionkey []byte, bucket string, session *session.Session) {
 			continue
 		}
 		absolutedir := BackupSrcFolder + "/" + f.Name()
+
+		if empty, err := isEmpty(absolutedir); err != nil {
+			log.Println("Skipping directory '" + absolutedir + "' empty check errored: " + err.Error())
+		} else if empty {
+			log.Println("Skipping directory '" + absolutedir + "' because it's empty.")
+			continue
+		}
+
+
 		err = backupDirectory(absolutedir, encryptionkey, bucket, session)
 		if err == nil {
 			log.Println("Backup of directory '" + absolutedir + "' is complete.")
@@ -109,10 +119,15 @@ func targetfilename(dir string) string {
 }
 
 func targz(dir string, targetfile string) error {
-	cmd := exec.Command("tar", "czf", targetfile, dir)
+	//https://unix.stackexchange.com/a/61760
+	stdout, stderr, exitcode := runCommand("tar", "czf", targetfile, "--warning=no-file-changed", "-C", "/", dir[1:])
 
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("tarring directory %v failed: %v: \n%v", dir, err.Error(), string(out))
+	// https://www.gnu.org/software/tar/manual/html_section/tar_19.html#Synopsis
+	// Status code 0 = sccessful termination
+	// Status code 1 = Some file differ //todo: handle this code differently
+	// Status code 2 = failure
+	if exitcode != 1 && exitcode != 0 {
+		return fmt.Errorf("tarring directory %v failed(%d): %v, %v", dir, exitcode, stderr, stdout)
 	}
 	return nil
 }
@@ -176,31 +191,52 @@ func encryptfile(infilename string, outfilename string, encryptionkey []byte) er
 	return nil
 }
 
-func decryptfile(infilename string, outfilename string, encryptionkey string) {
-	key, _ := hex.DecodeString(encryptionkey)
-
-	inFile, err := os.Open(infilename)
+//thanks to https://stackoverflow.com/a/30708914/2328729
+func isEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
-	defer inFile.Close()
+	defer f.Close()
 
-	block, err := aes.NewCipher(key)
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
+}
+
+//with thanks to https://stackoverflow.com/a/40770011/2328729
+func runCommand(name string, args ...string) (stdout string, stderr string, exitCode int) {
+	var outbuf, errbuf bytes.Buffer
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+
+	err := cmd.Run()
+	stdout = outbuf.String()
+	stderr = errbuf.String()
+
 	if err != nil {
-		panic(err)
+		// try to get the exit code
+		if exitError, ok := err.(*exec.ExitError); ok {
+			ws := exitError.Sys().(syscall.WaitStatus)
+			exitCode = ws.ExitStatus()
+		} else {
+			// This will happen (in OSX) if `name` is not available in $PATH,
+			// in this situation, exit code could not be get, and stderr will be
+			// empty string very likely, so we use the default fail code, and format err
+			// to string and set to stderr
+			log.Printf("Could not get exit code for failed program: %v, %v", name, args)
+			exitCode = 3
+			if stderr == "" {
+				stderr = err.Error()
+			}
+		}
+	} else {
+		// success, exitCode should be 0 if go is ok
+		ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
+		exitCode = ws.ExitStatus()
 	}
-
-	var iv [aes.BlockSize]byte
-	stream := cipher.NewOFB(block, iv[:])
-
-	outFile, err := os.OpenFile(outfilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		panic(err)
-	}
-	defer outFile.Close()
-
-	reader := &cipher.StreamReader{S: stream, R: inFile}
-	if _, err := io.Copy(outFile, reader); err != nil {
-		panic(err)
-	}
+	return
 }
