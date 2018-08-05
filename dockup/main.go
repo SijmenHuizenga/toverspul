@@ -39,6 +39,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	encryptionkey = []byte(strings.TrimSpace(string(encryptionkey)))
 
 	bucket := os.Getenv(EnvBucket)
 	cronpattern := os.Getenv(EnvCron)
