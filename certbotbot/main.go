@@ -8,25 +8,27 @@ import (
 	"errors"
 	"net/http"
 	"fmt"
+	"os"
 )
 
 const configFile = "/certbotbot-config.yaml"
-const certsDir = "/certbotbot/certs"
-const configDir = "/certbotbot/le-config"
-const workingDir = "/certbotbot/le-work"
-const logsDir = "/certbotbot/le-logs"
+const rootDir = "/certbotbot"
+const certsDir = rootDir + "/certs"
+const configDir = rootDir + "/le-config"
+const workingDir = rootDir + "/le-work"
+const logsDir = rootDir + "/le-logs"
 
 type Config struct {
 	Email                     string
 	HttpPort                  string
 	GoogleCredentialsFilePath string
 	Domains                   []CertConfig
-	DryRun					  bool
-	Staging					  bool
+	DryRun                    bool
+	Staging                   bool
 }
 
 type CertConfig struct {
-	Name 	   string
+	Name       string
 	Domain     string
 	Challenge  string
 	subdomains []string
@@ -36,6 +38,8 @@ func main() {
 	config := loadConfig(readFile(configFile))
 
 	log.Println("Loaded config: ", config)
+
+	makeDirectories()
 
 	setupHealthCheck()
 
@@ -49,7 +53,7 @@ func main() {
 	}
 }
 func setupHealthCheck() {
-	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hi there, I <3 certificates")
 	})
 	go func() {
@@ -119,7 +123,7 @@ func checkUpdate(domainConfig CertConfig, config Config) error {
 
 func getPem(certname string) (string, error) {
 	pt1, e1 := ioutil.ReadFile(configDir + "/live/" + certname + "/fullchain.pem")
-	pt2, e2 := ioutil.ReadFile(configDir +  "/live/" + certname + "/privkey.pem")
+	pt2, e2 := ioutil.ReadFile(configDir + "/live/" + certname + "/privkey.pem")
 
 	if e1 != nil || e2 != nil {
 		return "", errors.New(e1.Error() + " | " + e2.Error())
@@ -133,6 +137,36 @@ func storePem(certname string, pem string) {
 	err := ioutil.WriteFile(filename, []byte(pem), 0644)
 	if err != nil {
 		log.Println("ERROR: Couldn't write pem file '" + filename + "': " + err.Error())
+	}
+}
+
+func makeDirectories() {
+	if _, err := os.Stat(rootDir); os.IsNotExist(err) {
+		log.Fatal("Root config dir " + rootDir + " does not exist.")
+	}
+	if _, err := os.Stat(certsDir); os.IsNotExist(err) {
+		err := os.Mkdir(certsDir, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		os.Mkdir(configDir, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if _, err := os.Stat(logsDir); os.IsNotExist(err) {
+		os.Mkdir(logsDir, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if _, err := os.Stat(workingDir); os.IsNotExist(err) {
+		os.Mkdir(workingDir, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
