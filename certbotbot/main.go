@@ -43,7 +43,7 @@ func main() {
 
 	setupHealthCheck()
 
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(24 * time.Hour)
 	checkUpdates(config)
 	for {
 		select {
