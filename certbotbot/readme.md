@@ -6,6 +6,7 @@ Instructs certbot to request certificates based on a configuration file. Outputs
 httpport: 8888
 email: example@example.com
 googlecredentialsfilepath: /run/secrets/my_secret_data
+cloudflarecredentialsfilepath: /run/secrets/my_other_secret_data
 staging: true
 dryrun: true
 certs:
@@ -23,6 +24,10 @@ certs:
 ```
 
 To use the challenge `googledns` it requires a google cloud platform service account key json file. 
+
+To use the challenge `cloudflare` it requires a [cloudflare credentials file](https://certbot-dns-cloudflare.readthedocs.io/en/latest/).
+
+To use the `route53` challenge it requires [aws credentials](https://certbot-dns-route53.readthedocs.io/en/latest/). These can be provided in the `~/.aws/config` (or other location as specified in the `AWS_CONFIG_FILE` env variable) or by providing the `AWS_ACCESS_KEY_ID` and `AWS_ACCESS_KEY_ID` environment variables.
 
 The following things are stored in the following places and should be persistant:
 

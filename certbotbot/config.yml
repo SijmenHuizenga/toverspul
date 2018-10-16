@@ -2,6 +2,7 @@
 httpport: 8888
 email: example@example.com
 googlecredentialsfilepath: unset
+cloudflarecredentialsfilepath: unset
 staging: true
 dryrun: true
 certs:
