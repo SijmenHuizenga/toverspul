@@ -27,6 +27,11 @@ func loadConfig(data []byte) Config {
 		log.Fatal("Config file field googlecredentialsfilepath not found: " + err.Error())
 	}
 
+	cloudflarecreds, err := y.Get("cloudflarecredentialsfilepath").String()
+	if err != nil {
+		log.Fatal("Config file field cloudflarecredentialsfilepath not found: " + err.Error())
+	}
+
 	staging, err := y.Get("staging").Bool()
 	if err != nil {
 		log.Fatal("Config file field staging not found: " + err.Error())
@@ -41,6 +46,7 @@ func loadConfig(data []byte) Config {
 		Email: email,
 		HttpPort: strconv.Itoa(httpport),
 		GoogleCredentialsFilePath: gcreds,
+		CloudflareCredentialsFile: cloudflarecreds,
 		Domains: loadDomainsConfig(y.Get("certs")),
 		DryRun: dryrun,
 		Staging: staging,

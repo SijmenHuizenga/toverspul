@@ -10,6 +10,11 @@ RUN go build -a -o /go/bin/certbotbot
 
 
 # Actual image
-FROM certbot/dns-google
+FROM certbot/certbot
+
+RUN pip install certbot-dns-cloudflare
+RUN pip install certbot-dns-google
+RUN pip install certbot-dns-route53
+
 COPY --from=builder /go/bin/certbotbot /usr/local/bin/toverspul-certbotbot
 ENTRYPOINT ["/usr/local/bin/toverspul-certbotbot"]

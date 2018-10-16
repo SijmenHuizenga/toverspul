@@ -22,6 +22,7 @@ type Config struct {
 	Email                     string
 	HttpPort                  string
 	GoogleCredentialsFilePath string
+	CloudflareCredentialsFile string
 	Domains                   []CertConfig
 	DryRun                    bool
 	Staging                   bool
@@ -109,6 +110,12 @@ func checkUpdate(domainConfig CertConfig, config Config) error {
 		break
 	case "googledns":
 		args = append(args, "--dns-google", "--dns-google-credentials", config.GoogleCredentialsFilePath)
+		break
+	case "route53":
+		args = append(args, "--dns-route53")
+		break
+	case "cloudflare":
+		args = append(args, "--dns-cloudflare", "--dns-cloudflare-credentials", config.CloudflareCredentialsFile)
 		break
 	default:
 		return errors.New("Challenge type " + domainConfig.Challenge + " not supported")
