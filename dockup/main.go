@@ -1,24 +1,26 @@
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"os"
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/robfig/cron"
 	"io"
-	"os/exec"
 	"io/ioutil"
 	"log"
-	"time"
+	"os"
+	"os/exec"
+	"sort"
 	"strings"
-	"github.com/robfig/cron"
-	"bytes"
 	"syscall"
+	"time"
 )
 
 const EnvBucket = "BUCKET"
@@ -140,6 +142,24 @@ func uploadToAws(session *session.Session, filename string, bucket string, targe
 	if err != nil {
 		return fmt.Errorf("failed to upload file, %v", err)
 	}
+	return nil
+}
+
+func cleanupOldBackups(bucket string, name string, session *session.Session) error {
+	sss := s3.New(session)
+	listResult, err := sss.ListObjectsV2(&s3.ListObjectsV2Input{
+		Prefix: aws.String(name),
+		Bucket: aws.String(bucket),
+	})
+	if err != nil {
+		return err
+	}
+	var keys []string
+	for _, obj := range listResult.Contents {
+		keys = append(keys, aws.StringValue(obj.Key))
+	}
+	sort.Strings(keys)
+	//todo
 	return nil
 }
 
