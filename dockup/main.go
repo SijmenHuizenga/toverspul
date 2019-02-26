@@ -145,6 +145,28 @@ func uploadToAws(session *session.Session, filename string, bucket string, targe
 	return nil
 }
 
+var schedule = map[int]int{
+	7: 7,      // 7 daily
+	30: 10,    // 10 every month so every
+	12*30: 12, // 1 every month for 12 months
+}
+
+func backupding() {
+	/*
+	t = Tijd is dat deze reeks backups bewaard moet worden.
+	n = Aantal backups dat je in die tijd wil bewaren.
+	x = Dagnummer waarop de backup is gemaakt
+
+	Bijvoorbeeld
+	  7 dagelijkse (t=7, n=7)
+	  6 maandelijkse (t=30, n=6)
+
+	Als x > t dan kan de backup altijd weg.
+	Als x <= t en x is deelbaar door t/n dan moet die bewaard blijven.
+	*/
+
+}
+
 func cleanupOldBackups(bucket string, name string, session *session.Session) error {
 	sss := s3.New(session)
 	listResult, err := sss.ListObjectsV2(&s3.ListObjectsV2Input{
