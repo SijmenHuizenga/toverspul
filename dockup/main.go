@@ -1,28 +1,31 @@
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"os"
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/robfig/cron"
 	"io"
-	"os/exec"
 	"io/ioutil"
 	"log"
-	"time"
+	"os"
+	"os/exec"
+	"sort"
 	"strings"
-	"github.com/robfig/cron"
-	"bytes"
 	"syscall"
+	"time"
 )
 
 const EnvBucket = "BUCKET"
 const EnvCron = "CRON"
+const EnvName = "NAME"
 
 const TarTarget = "/tmp.tar.gz"
 const TarTargetEncrypted = "/tmp.enc"
@@ -30,7 +33,6 @@ const TarTargetEncrypted = "/tmp.enc"
 const BackupSrcFolder = "/backup"
 const BackupEncryptionKeyfile = "/run/secrets/passfile"
 const CredentialsFile = "/run/secrets/aws-credentials"
-const HostHostefile = "/etc/hosthostname"
 
 func main() {
 	sess, err := openAwsSession()
@@ -42,45 +44,34 @@ func main() {
 	encryptionkey = []byte(strings.TrimSpace(string(encryptionkey)))
 
 	bucket := os.Getenv(EnvBucket)
+	name := os.Getenv(EnvName)
 	cronpattern := os.Getenv(EnvCron)
 
 	c := cron.New()
 	c.AddFunc(cronpattern, func() {
-		backup(encryptionkey, bucket, sess)
+		backup(encryptionkey, bucket, name, sess)
 	})
 	c.Run()
 }
 
-func backup(encryptionkey []byte, bucket string, session *session.Session) {
-	files, err := ioutil.ReadDir(BackupSrcFolder)
-	if err != nil {
-		log.Fatal(err)
+func backup(encryptionkey []byte, bucket string, backupname string, session *session.Session) {
+	if empty, err := isEmpty(BackupSrcFolder); err != nil {
+		log.Println("Skipping backup " + backupname + " because " + BackupSrcFolder + " empty check errored: " + err.Error())
+		return
+	} else if empty {
+		log.Println("Skipping backup " + backupname + " because " + BackupSrcFolder + " is empty.")
+		return
 	}
 
-	for _, f := range files {
-		if !f.IsDir() {
-			continue
-		}
-		absolutedir := BackupSrcFolder + "/" + f.Name()
-
-		if empty, err := isEmpty(absolutedir); err != nil {
-			log.Println("Skipping directory '" + absolutedir + "' empty check errored: " + err.Error())
-		} else if empty {
-			log.Println("Skipping directory '" + absolutedir + "' because it's empty.")
-			continue
-		}
-
-
-		err = backupDirectory(absolutedir, encryptionkey, bucket, session)
-		if err == nil {
-			log.Println("Backup of directory '" + absolutedir + "' is complete.")
-		}else {
-			log.Println("Backup of directory '" + absolutedir + "' failed: " + err.Error())
-		}
+	err := backupDirectory(BackupSrcFolder, encryptionkey, bucket, backupname, session)
+	if err == nil {
+		log.Println("Backup "+backupname+" is complete.")
+	}else {
+		log.Println("Backup "+backupname+" failed: " + err.Error())
 	}
 }
 
-func backupDirectory(dir string, encryptionkey []byte, bucket string, session *session.Session) error {
+func backupDirectory(dir string, encryptionkey []byte, bucket string, backupname string, session *session.Session) error {
 	ensureEmptyWorkspace()
 	err := targz(dir, TarTarget)
 	if err != nil {
@@ -92,7 +83,7 @@ func backupDirectory(dir string, encryptionkey []byte, bucket string, session *s
 		return err
 	}
 
-	return uploadToAws(session, TarTargetEncrypted, bucket, targetfilename(dir))
+	return uploadToAws(session, TarTargetEncrypted, bucket, targetfilename(backupname))
 }
 
 func ensureEmptyWorkspace() {
@@ -106,17 +97,8 @@ func deleteIfExist(target string){
 	}
 }
 
-func targetfilename(dir string) string {
-	hostnamefile, err := ioutil.ReadFile(HostHostefile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	folderlist := strings.Split(dir, "/")
-	return folderlist[len(folderlist)-1] + "/" +
-		time.Now().Format("2006-01-02 15:04:05 ") +
-		"[" + strings.TrimSpace(string(hostnamefile)) + "]"+
-		".tar.gz.eas256"
+func targetfilename(name string) string {
+	return name + "/" + time.Now().Format("2006-01-02 15:04:05") + ".tar.gz.eas256"
 }
 
 func targz(dir string, targetfile string) error {
@@ -160,6 +142,24 @@ func uploadToAws(session *session.Session, filename string, bucket string, targe
 	if err != nil {
 		return fmt.Errorf("failed to upload file, %v", err)
 	}
+	return nil
+}
+
+func cleanupOldBackups(bucket string, name string, session *session.Session) error {
+	sss := s3.New(session)
+	listResult, err := sss.ListObjectsV2(&s3.ListObjectsV2Input{
+		Prefix: aws.String(name),
+		Bucket: aws.String(bucket),
+	})
+	if err != nil {
+		return err
+	}
+	var keys []string
+	for _, obj := range listResult.Contents {
+		keys = append(keys, aws.StringValue(obj.Key))
+	}
+	sort.Strings(keys)
+	//todo
 	return nil
 }
 
