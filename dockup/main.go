@@ -173,8 +173,11 @@ func shouldBackupBeKept(x int64) bool {
 	Als x <= t en x is deelbaar door t/n dan moet die bewaard blijven.
 	*/
 
+	now := time.Now()
+	currentDay := int64(now.Year()) * int64(365) + int64(now.YearDay())
+
 	for t, n := range schedule {
-		if x <= t && x % (t/n) == 0 {
+		if x <= currentDay-t && x % (t/n) == 0 {
 			return true
 		}
 	}
