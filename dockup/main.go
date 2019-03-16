@@ -192,7 +192,7 @@ func cleanupOldBackups(bucket string, name string, session *session.Session) err
 	}
 	for _, obj := range listResult.Contents {
 		key := aws.StringValue(obj.Key)
-		dateString := strings.TrimSuffix(key, fileSuffix)
+		dateString := strings.TrimPrefix(strings.TrimSuffix(key, fileSuffix), name + "/")
 		dateTime, err := time.Parse(fileFormat, dateString)
 		if err != nil {
 			log.Println("Invalid backup filename: " + key, err)
