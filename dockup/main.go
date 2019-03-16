@@ -177,7 +177,7 @@ func shouldBackupBeKept(x int64) bool {
 	currentDay := int64(now.Year()) * int64(365) + int64(now.YearDay())
 
 	for t, n := range schedule {
-		if x <= currentDay-t && x % (t/n) == 0 {
+		if x >= currentDay-t && x % (t/n) == 0 {
 			return true
 		}
 	}
