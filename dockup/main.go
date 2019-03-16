@@ -17,7 +17,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -63,11 +62,17 @@ func backup(encryptionkey []byte, bucket string, backupname string, session *ses
 		return
 	}
 
-	err := backupDirectory(BackupSrcFolder, encryptionkey, bucket, backupname, session)
-	if err == nil {
+	if err := backupDirectory(BackupSrcFolder, encryptionkey, bucket, backupname, session); err == nil {
 		log.Println("Backup "+backupname+" is complete.")
 	}else {
 		log.Println("Backup "+backupname+" failed: " + err.Error())
+	}
+
+	log.Println("Starting backup cleanup...")
+	if err := cleanupOldBackups(bucket, backupname, session); err  == nil {
+		log.Println("Backup cleanup finished")
+	} else {
+		log.Println("Backup cleanup of "+backupname+" failed: " + err.Error())
 	}
 }
 
@@ -97,8 +102,11 @@ func deleteIfExist(target string){
 	}
 }
 
+const fileFormat = "2006-01-02 15:04:05"
+const fileSuffix = ".tar.gz.eas256"
+
 func targetfilename(name string) string {
-	return name + "/" + time.Now().Format("2006-01-02 15:04:05") + ".tar.gz.eas256"
+	return name + "/" + time.Now().Format(fileFormat) + fileSuffix
 }
 
 func targz(dir string, targetfile string) error {
@@ -145,17 +153,17 @@ func uploadToAws(session *session.Session, filename string, bucket string, targe
 	return nil
 }
 
-var schedule = map[int]int{
+var schedule = map[int64]int64{
 	7: 7,      // 7 daily
 	30: 10,    // 10 every month so every
 	12*30: 12, // 1 every month for 12 months
 }
 
-func backupding() {
+func shouldBackupBeKept(x int64) bool {
 	/*
 	t = Tijd is dat deze reeks backups bewaard moet worden.
 	n = Aantal backups dat je in die tijd wil bewaren.
-	x = Dagnummer waarop de backup is gemaakt
+	x = Dagnummer waarop de backup is gemaakt. Getal start op 01-01-1970
 
 	Bijvoorbeeld
 	  7 dagelijkse (t=7, n=7)
@@ -165,6 +173,12 @@ func backupding() {
 	Als x <= t en x is deelbaar door t/n dan moet die bewaard blijven.
 	*/
 
+	for t, n := range schedule {
+		if x <= t && x % (t/n) == 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func cleanupOldBackups(bucket string, name string, session *session.Session) error {
@@ -176,12 +190,28 @@ func cleanupOldBackups(bucket string, name string, session *session.Session) err
 	if err != nil {
 		return err
 	}
-	var keys []string
 	for _, obj := range listResult.Contents {
-		keys = append(keys, aws.StringValue(obj.Key))
+		key := aws.StringValue(obj.Key)
+		dateString := strings.TrimSuffix(key, fileSuffix)
+		dateTime, err := time.Parse(fileFormat, dateString)
+		if err != nil {
+			log.Println("Invalid backup filename: " + key, err)
+			continue
+		}
+		dateDay := int64(dateTime.Year()) * int64(365) + int64(dateTime.YearDay())
+		if shouldBackupBeKept(dateDay) {
+			log.Println("Keeping backup " + key)
+		} else {
+			log.Println("Deleting backup " + key)
+			//_, err := sss.DeleteObject(&s3.DeleteObjectInput{
+			//	Key: obj.Key,
+			//	Bucket: aws.String(bucket),
+			//})
+			//if err != nil {
+			//	log.Println(err)
+			//}
+		}
 	}
-	sort.Strings(keys)
-	//todo
 	return nil
 }
 
