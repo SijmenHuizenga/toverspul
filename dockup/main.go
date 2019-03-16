@@ -206,13 +206,13 @@ func cleanupOldBackups(bucket string, name string, session *session.Session) err
 			log.Println("Keeping backup " + key)
 		} else {
 			log.Println("Deleting backup " + key)
-			//_, err := sss.DeleteObject(&s3.DeleteObjectInput{
-			//	Key: obj.Key,
-			//	Bucket: aws.String(bucket),
-			//})
-			//if err != nil {
-			//	log.Println(err)
-			//}
+			_, err := sss.DeleteObject(&s3.DeleteObjectInput{
+				Key: obj.Key,
+				Bucket: aws.String(bucket),
+			})
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 	return nil
